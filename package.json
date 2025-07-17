@@ -1,0 +1,113 @@
+{
+  "name": "nano-protein-viewer",
+  "displayName": "Nano Protein Viewer",
+  "description": "Advanced protein structure visualization with Molstar, featuring sequence alignment, diffusion animations, and pLDDT confidence coloring",
+  "version": "1.0.1",
+  "publisher": "StevenYu",
+  "author": {
+    "name": "Steven Yu"
+  },
+  "icon": "media/logo.ico",
+  "engines": {
+    "vscode": "^1.62.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StevenYu/nano-protein-viewer.git"
+  },
+  "license": "MIT",
+  "categories": [
+    "Other",
+    "Visualization",
+    "Data Science"
+  ],
+  "keywords": [
+    "protein",
+    "molecule",
+    "biology",
+    "3d",
+    "structure",
+    "pdb",
+    "mmcif",
+    "molstar",
+    "bioinformatics",
+    "computational biology",
+    "chemistry",
+    "sequence alignment",
+    "diffusion",
+    "animation",
+    "plddt",
+    "esmfold",
+    "alphafold"
+  ],
+  "activationEvents": [
+    "onCommand:nano-protein-viewer.start",
+    "onCommand:nano-protein-viewer.loadPDBFiles",
+    "onCommand:nano-protein-viewer.loadFolder",
+    "onCommand:nano-protein-viewer.loadFASTA"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "nano-protein-viewer.start",
+        "title": "Open Nano Protein Viewer"
+      },
+      {
+        "command": "nano-protein-viewer.loadPDBFiles",
+        "title": "Load PDB/mmCIF Files in Nano Viewer"
+      },
+      {
+        "command": "nano-protein-viewer.loadFolder",
+        "title": "Load Folder in Nano Viewer"
+      },
+      {
+        "command": "nano-protein-viewer.loadFASTA",
+        "title": "Load FASTA in Nano Viewer"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceExtname == .pdb || resourceExtname == .PDB || resourceExtname == .mmcif || resourceExtname == .MMCIF || resourceExtname == .cif || resourceExtname == .CIF",
+          "command": "nano-protein-viewer.loadPDBFiles",
+          "group": "navigation"
+        },
+        {
+          "when": "resourceExtname == .fasta || resourceExtname == .FASTA || resourceExtname == .fa || resourceExtname == .FA || resourceExtname == .fas || resourceExtname == .FAS",
+          "command": "nano-protein-viewer.loadFASTA",
+          "group": "navigation"
+        },
+        {
+          "when": "explorerResourceIsFolder",
+          "command": "nano-protein-viewer.loadFolder",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.4",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.11.7",
+    "@types/vscode": "^1.62.0",
+    "@typescript-eslint/eslint-plugin": "^5.1.0",
+    "@typescript-eslint/parser": "^5.1.0",
+    "@vscode/test-electron": "^1.6.2",
+    "eslint": "^8.1.0",
+    "glob": "^7.1.7",
+    "mocha": "^9.1.3",
+    "typescript": "^4.4.4"
+  },
+  "dependencies": {
+    "molstar": "^4.8.0"
+  }
+}

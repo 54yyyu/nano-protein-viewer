@@ -1,0 +1,4530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Molstar-based Protein Visualizer</title>
+    <!-- Molstar CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/molstar@latest/build/viewer/molstar.css" />
+    <!-- Molstar JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/molstar@latest/build/viewer/molstar.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent body scrollbars */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: hsl(210, 40%, 98%);
+        }
+        #container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+        /* --- Left Control Panel --- */
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: hsl(0, 0%, 100%);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px hsl(220, 13%, 91%), 0 2px 4px -1px hsl(220, 13%, 91%);
+            border: 1px solid hsl(220, 13%, 91%);
+            z-index: 100;
+            max-width: 320px;
+            max-height: calc(100vh - 20px);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+        
+        #controls.collapsed {
+            max-width: 60px;
+            padding: 15px;
+        }
+        
+        #controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        #controls-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: hsl(220, 9%, 46%);
+        }
+        
+        #controls.collapsed #controls-header h2 {
+            display: none;
+        }
+        
+        #toggle-controls {
+            width: auto !important;
+            min-width: 30px !important;
+            padding: 4px 8px !important;
+            margin: 0 !important;
+            font-size: 14px !important;
+            background: hsl(220, 13%, 91%) !important;
+            color: hsl(220, 9%, 46%) !important;
+            border-radius: 4px !important;
+            box-shadow: none !important;
+        }
+        
+        #toggle-controls:hover {
+            background: hsl(220, 13%, 85%) !important;
+        }
+        
+        #controls-content {
+            flex: 1;
+            transition: all 0.3s ease;
+        }
+        
+        #controls.collapsed #controls-content {
+            display: none;
+        }
+        /* --- Right File List Panel --- */
+        #file-list-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 280px;
+            max-height: calc(100vh - 20px);
+            background: hsl(0, 0%, 100%);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px hsl(220, 13%, 91%), 0 2px 4px -1px hsl(220, 13%, 91%);
+            border: 1px solid hsl(220, 13%, 91%);
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        #file-list-panel.collapsed {
+            width: 60px;
+            padding: 15px;
+        }
+         /* --- File List Header --- */
+        #file-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid hsl(220, 13%, 91%);
+        }
+        
+        #file-list-header h3 {
+            margin: 0;
+            border: none;
+            padding: 0;
+            font-size: 16px;
+            color: hsl(220, 9%, 46%);
+        }
+        
+        #file-list-panel.collapsed #file-list-header h3 {
+            display: none;
+        }
+        
+        #file-list-panel.collapsed #file-list-header {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+            justify-content: center;
+        }
+        
+        #toggle-file-list {
+            width: auto !important;
+            min-width: 30px !important;
+            padding: 4px 8px !important;
+            margin: 0 !important;
+            font-size: 14px !important;
+            line-height: 1;
+            background: hsl(220, 13%, 91%) !important;
+            color: hsl(220, 9%, 46%) !important;
+            border-radius: 4px !important;
+            box-shadow: none !important;
+        }
+        
+        #toggle-file-list:hover {
+            background: hsl(220, 13%, 85%) !important;
+        }
+        /* --- File History Styling (includes collapse) --- */
+        #file-history {
+            border: 1px solid hsl(220, 13%, 91%);
+            padding: 5px;
+            flex-grow: 1;
+            min-height: 50px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, border-width 0.3s ease-in-out, padding 0.3s ease-in-out, margin-top 0.3s ease-in-out, min-height 0.3s ease-in-out;
+            margin-top: 5px;
+            opacity: 1;
+        }
+        
+        #file-history.collapsed {
+            max-height: 0;
+            min-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-width: 0;
+            overflow: hidden;
+            opacity: 0;
+            margin-top: 0;
+        }
+        
+        #file-list-panel.collapsed #file-history {
+            display: none;
+        }
+        .file-item {
+            padding: 6px 8px;
+            background-color: #f0f0f0;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 13px;
+            border-left: 3px solid transparent;
+            color: hsl(220, 9%, 46%);
+        }
+        .file-item:hover {
+            background-color: #e0e0e0;
+        }
+        .file-item.active {
+            background-color: #d1e7dd;
+            border-left: 3px solid #4CAF50;
+            font-weight: bold;
+        }
+        /* --- Other Controls --- */
+        button {
+            padding: 10px 16px;
+            background: hsl(220, 9%, 46%);
+            border: none;
+            border-radius: 6px;
+            color: hsl(210 40% 98%);
+            cursor: pointer;
+            margin: 5px 0;
+            width: 100%;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px 0 hsl(220, 13%, 91%);
+        }
+        button:hover {
+            background: hsl(220, 9%, 41%);
+            box-shadow: 0 2px 4px 0 hsl(220, 13%, 91%);
+        }
+        button:active {
+            background: hsl(220, 9%, 36%);
+        }
+        .slider-container { margin: 10px 0; }
+        .slider-container label { display: block; margin-bottom: 5px; font-size: 14px; }
+        .slider-container input[type=range] { width: 100%; }
+        #loading {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.75); color: white; padding: 20px 35px;
+            border-radius: 8px; display: none; z-index: 200; font-size: 16px;
+        }
+        #status { margin-top: 10px; font-size: 14px; color: hsl(220, 9%, 46%); }
+        #atom-count { font-weight: bold; }
+        #animation-controls { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd; }
+        #animation-slider { width: 100%; margin: 10px 0; }
+        #frame-info { text-align: center; margin: 5px 0; font-size: 14px; }
+        
+        /* Animation Controls Styling */
+        .animation-main-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin: 15px 0;
+        }
+        
+        .animation-direction-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .direction-label {
+            font-size: 12px;
+            color: hsl(220, 9%, 46%);
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        .control-btn {
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px 0 hsl(220, 13%, 91%);
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px 0 hsl(220, 13%, 91%);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        .play-btn {
+            background: hsl(220, 9%, 46%);
+            color: hsl(210 40% 98%);
+            padding: 8px 12px;
+            font-size: 14px;
+            min-width: 40px;
+        }
+        
+        .play-btn:hover {
+            background: hsl(220, 9%, 41%);
+        }
+        
+        .play-btn.playing {
+            background: hsl(220, 9%, 46%);
+            color: hsl(210 40% 98%);
+        }
+        
+        .play-btn.playing:hover {
+            background: hsl(220, 9%, 41%);
+        }
+        
+        .step-btn {
+            background: hsl(0 0% 100%);
+            color: hsl(220, 9%, 46%);
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+            padding: 8px 12px;
+            font-size: 14px;
+            min-width: 40px;
+        }
+        
+        .step-btn:hover {
+            background: hsl(210 40% 98%);
+        }
+        
+        .direction-btn {
+            background: hsl(0 0% 100%);
+            color: hsl(220, 9%, 46%);
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+            padding: 8px 12px;
+            font-size: 14px;
+            min-width: 40px;
+        }
+        
+        .direction-btn:hover {
+            background: hsl(210 40% 98%);
+        }
+        
+        .direction-btn.active {
+            background: hsl(220, 9%, 46%);
+            color: hsl(210 40% 98%);
+            border-color: hsl(220, 9%, 46%);
+        }
+        
+        .animation-download-controls {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            position: relative;
+        }
+        
+        .download-btn {
+            background: hsl(220, 9%, 46%);
+            color: hsl(210 40% 98%);
+            padding: 8px 16px;
+            font-size: 13px;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        
+        .download-btn:hover {
+            background: hsl(220, 9%, 41%);
+        }
+        
+        .download-options {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        
+        .download-option {
+            background: hsl(0 0% 100%);
+            color: hsl(220, 9%, 46%);
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+            padding: 6px 12px;
+            font-size: 11px;
+            flex: 1;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .download-option:hover {
+            background: hsl(210 40% 98%);
+        }
+        
+        /* pLDDT Confidence Info Section */
+        .plddt-info-section {
+            margin: 10px 0;
+            padding: 10px 0;
+            border-top: 1px solid hsl(214.3 31.8% 91.4%);
+        }
+        
+        .plddt-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .plddt-info-header h4 {
+            margin: 0;
+            font-size: 13px;
+            color: hsl(215.4 16.3% 46.9%);
+            font-weight: 600;
+        }
+        
+        .plddt-info-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .plddt-info-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .plddt-info-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .plddt-info-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .plddt-info-slider {
+            background-color: hsl(220, 9%, 46%);
+        }
+        
+        input:checked + .plddt-info-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .plddt-info-content {
+            display: none;
+        }
+        
+        .plddt-info-content.active {
+            display: block;
+        }
+        
+        .plddt-info-panel {
+            background: hsl(210 40% 98%);
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        
+        .plddt-description {
+            font-size: 12px;
+            color: hsl(215.4 16.3% 46.9%);
+            margin-bottom: 12px;
+        }
+        
+        .plddt-legend {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .plddt-item {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: hsl(215.4 16.3% 46.9%);
+        }
+        
+        .plddt-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin-right: 8px;
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+        }
+        
+        .input-container { margin-bottom: 10px; }
+        h2, h3, h4 { 
+            margin-top: 5px; 
+            color: hsl(220, 9%, 46%);
+        }
+        /* Format badges */
+        .format-badge {
+            display: inline-block;
+            margin-left: 5px;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: normal;
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        .format-badge.pdb {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        .format-badge.mmcif {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+        
+        /* View Mode Controls - Removed, using cartoon mode only */
+        
+        /* Layout Mode Controls */
+        .layout-mode-controls {
+            margin: 15px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .layout-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .layout-buttons button {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 14px;
+            margin: 0;
+        }
+        .layout-buttons button.active {
+            background-color: hsl(222.2 84% 4.9%);
+        }
+        .layout-buttons button.active:hover {
+            background-color: hsl(222.2 84% 4.9% / 0.9);
+        }
+        
+        /* Color Controls */
+        .color-controls {
+            margin: 15px 0;
+            padding: 10px 0;
+            border-top: 1px solid #ddd;
+        }
+        .color-mode-buttons {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .color-mode-buttons button {
+            flex: 1;
+            padding: 6px 8px;
+            font-size: 12px;
+            margin: 0;
+            min-width: 50px;
+        }
+        .color-mode-buttons button.active {
+            background-color: hsl(222.2 84% 4.9%);
+        }
+        .color-mode-buttons button.active:hover {
+            background-color: hsl(222.2 84% 4.9% / 0.9);
+        }
+        
+        /* Color Palette */
+        .custom-colors {
+            margin-top: 10px;
+        }
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .color-option:hover {
+            border-color: #666;
+            transform: scale(1.1);
+        }
+        .color-option.active {
+            border-color: hsl(222.2 84% 4.9%);
+            border-width: 3px;
+        }
+        
+        /* Cartoon Controls removed per requirements */
+        
+        /* Sequence Alignment Controls */
+        .seq-alignment-controls {
+            margin: 15px 0;
+            padding: 15px 0;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .seq-alignment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .seq-alignment-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .seq-alignment-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .seq-alignment-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .seq-alignment-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .seq-alignment-slider {
+            background-color: hsl(222.2 84% 4.9%);
+        }
+        
+        input:checked + .seq-alignment-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .seq-alignment-content {
+            display: none;
+        }
+        
+        .seq-alignment-content.active {
+            display: block;
+        }
+        
+        .input-mode-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .input-mode-buttons button {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .input-mode-buttons button.active {
+            background-color: hsl(222.2 84% 4.9%);
+        }
+        
+        .input-mode-buttons button.active:hover {
+            background-color: hsl(222.2 84% 4.9% / 0.9);
+        }
+        
+        .sequence-input-section {
+            margin-bottom: 15px;
+        }
+        
+        .sequence-textarea {
+            width: 100%;
+            height: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+        
+        .sequence-list {
+            max-height: 120px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .sequence-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .sequence-item:last-child {
+            border-bottom: none;
+        }
+        
+        .sequence-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .sequence-item.active {
+            background-color: hsl(217.2 91.2% 59.8% / 0.1);
+            border-left: 3px solid hsl(222.2 84% 4.9%);
+        }
+        
+        .sequence-item.predicted {
+            background-color: hsl(142.1 76.2% 36.3% / 0.1);
+            border-left: 3px solid hsl(142.1 76.2% 36.3%);
+        }
+        
+        .sequence-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .sequence-preview {
+            font-family: monospace;
+            font-size: 10px;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .sequence-status {
+            font-size: 10px;
+            color: hsl(220, 9%, 46%);
+            margin-top: 2px;
+        }
+        
+        .rmsd-score {
+            float: right;
+            background: hsl(142.1 76.2% 36.3% / 0.1);
+            color: hsl(142.1 76.2% 36.3%);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .align-mode-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        
+        .align-mode-switch {
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        /* 3DMol viewer container */
+        #viewer-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        /* Dual session containers */
+        .dual-session-mode #viewer-container {
+            display: none;
+        }
+        
+        .dual-session-mode #dual-session-container {
+            display: block;
+        }
+        
+        .single-session-mode #dual-session-container {
+            display: none;
+        }
+        
+        #dual-session-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: none;
+        }
+        
+        .dual-viewers {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            height: 100%;
+            padding: 4px;
+        }
+        
+        .dual-viewer-panel {
+            background: hsl(0, 0%, 100%);
+            border: 2px solid hsl(220, 13%, 91%);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .dual-viewer-header {
+            background: hsl(220, 9%, 46%);
+            color: hsl(210, 40%, 98%);
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .dual-viewer-content {
+            height: calc(100% - 32px);
+        }
+        
+        /* Grid View Styles */
+        .grid-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 10px;
+            padding: 10px;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .grid-item {
+            border: 2px solid hsl(220, 13%, 91%);
+            border-radius: 12px;
+            position: relative;
+            min-height: 300px;
+            background: hsl(0, 0%, 100%);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px 0 hsl(220, 13%, 91%);
+        }
+        
+        .grid-item.loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .grid-preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        
+        .grid-activation-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+            z-index: 20;
+        }
+        
+        .grid-item:hover .grid-activation-overlay {
+            opacity: 1;
+        }
+        
+        .grid-expand-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.3;
+            transition: all 0.2s ease;
+            z-index: 25;
+            pointer-events: auto;
+        }
+        
+        .grid-expand-button:hover {
+            opacity: 0.9;
+            background: rgba(0, 0, 0, 0.8);
+            transform: scale(1.1);
+        }
+        
+        .grid-item.active .grid-expand-button {
+            opacity: 0.6;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .grid-item:hover {
+            border-color: hsl(221, 83%, 53%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px 0 hsl(220, 13%, 91%);
+        }
+        
+        .grid-item.active {
+            border-color: hsl(142, 76%, 36%);
+            border-width: 3px;
+            box-shadow: 0 4px 8px 0 hsl(142, 76%, 91%);
+        }
+        
+        .grid-item-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: hsl(220, 9%, 46%);
+            color: hsl(210, 40%, 98%);
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 10;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .grid-item-viewer {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+        }
+        
+        .single-view #viewer-container {
+            display: block !important;
+            visibility: visible !important;
+            z-index: 1;
+        }
+        
+        .grid-view-mode #viewer-container {
+            display: none !important;
+            visibility: hidden !important;
+            z-index: -1;
+        }
+        
+        .grid-view-mode #grid-container {
+            display: block;
+        }
+        
+        .single-view #grid-container {
+            display: none;
+        }
+        
+        #grid-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        /* VSCode Integration Styles */
+        .vscode-input-section {
+            margin: 15px 0;
+            padding: 15px 0;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .vscode-input-section h3 {
+            margin-bottom: 10px;
+            color: hsl(220, 9%, 46%);
+        }
+        
+        .vscode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .vscode-button {
+            padding: 8px 12px;
+            font-size: 14px;
+            margin: 0;
+            background: hsl(220, 9%, 46%);
+            color: hsl(210, 40%, 98%);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .vscode-button:hover {
+            background: hsl(220, 9%, 41%);
+        }
+        
+        .vscode-button:active {
+            background: hsl(220, 9%, 36%);
+        }
+    </style>
+</head>
+<body>
+    <div id="container" class="single-view">
+        <div id="controls">
+            <div id="controls-header">
+                <h2>Controls</h2>
+                <button id="toggle-controls" title="Collapse Controls">[−]</button>
+            </div>
+            <div id="controls-content">
+            <!-- VSCode Integration Section -->
+            <div class="vscode-input-section">
+                <h3>VSCode Integration</h3>
+                <div class="vscode-buttons">
+                    <button class="vscode-button" id="request-pdb-files">Load PDB Files</button>
+                    <button class="vscode-button" id="request-folder">Load Folder</button>
+                </div>
+            </div>
+            <button id="reset-view">Reset View</button>
+            
+            <!-- Cartoon mode is now the default and only view mode -->
+            
+            <!-- Layout Mode Controls -->
+            <div class="layout-mode-controls">
+                <h3>Layout</h3>
+                <div class="layout-buttons">
+                    <button id="single-view" class="active">Single</button>
+                    <button id="grid-view">Grid</button>
+                </div>
+            </div>
+            
+            <!-- Cartoon controls removed per requirements -->
+            
+            
+            <!-- Color Controls -->
+            <div class="color-controls">
+                <h3>Colors</h3>
+                <div class="color-mode-buttons">
+                    <button id="color-custom">Custom</button>
+                    <button id="color-by-element">Element</button>
+                    <button id="color-by-residue">Residue</button>
+                    <button id="color-by-chain">Chain</button>
+                </div>
+                
+                <!-- Custom Color Palette -->
+                <div id="custom-colors" class="custom-colors">
+                    <div class="color-palette">
+                        <div class="color-option" data-color="#4ECDC4" style="background-color: #4ECDC4;" title="Teal (Default)"></div>
+                        <div class="color-option" data-color="#FF6B6B" style="background-color: #FF6B6B;" title="Red"></div>
+                        <div class="color-option" data-color="#4DABF7" style="background-color: #4DABF7;" title="Blue"></div>
+                        <div class="color-option" data-color="#69DB7C" style="background-color: #69DB7C;" title="Green"></div>
+                        <div class="color-option" data-color="#FFD93D" style="background-color: #FFD93D;" title="Yellow"></div>
+                        <div class="color-option" data-color="#FF922B" style="background-color: #FF922B;" title="Orange"></div>
+                        <div class="color-option" data-color="#DA77F2" style="background-color: #DA77F2;" title="Purple"></div>
+                        <div class="color-option" data-color="#FF8CC8" style="background-color: #FF8CC8;" title="Pink"></div>
+                        <div class="color-option" data-color="#15AABF" style="background-color: #15AABF;" title="Cyan"></div>
+                        <div class="color-option" data-color="#868E96" style="background-color: #868E96;" title="Gray"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sequence Alignment Controls -->
+            <div class="seq-alignment-controls">
+                <div class="seq-alignment-header">
+                    <h3>Seq Alignment</h3>
+                    <label class="seq-alignment-switch">
+                        <input type="checkbox" id="seq-alignment-toggle">
+                        <span class="seq-alignment-slider"></span>
+                    </label>
+                </div>
+                
+                <div id="seq-alignment-content" class="seq-alignment-content">
+                    <!-- Input Mode Selection -->
+                    <div class="input-mode-buttons">
+                        <button id="fasta-mode" class="active">FASTA File</button>
+                        <button id="single-mode">Single Sequence</button>
+                    </div>
+                    
+                    <!-- FASTA Input Section -->
+                    <div id="fasta-input-section" class="sequence-input-section">
+                        <input type="file" id="fasta-file-input" accept=".fasta,.fa,.fas,.txt" style="display: none;">
+                        <button id="upload-fasta-btn">Upload FASTA File</button>
+                        <div style="margin: 8px 0; text-align: center; color: hsl(220, 9%, 46%); font-size: 12px;">or</div>
+                        <textarea id="fasta-textarea" class="sequence-textarea" placeholder="Paste FASTA sequences here...&#10;>sequence1&#10;MKLLILLVALLMLAATVFAAAAKKVFGRC...&#10;>sequence2&#10;GRCTKLLILLVALLMLAATVFAAAA..."></textarea>
+                        <button id="parse-fasta-btn">Parse FASTA</button>
+                    </div>
+                    
+                    <!-- Single Sequence Input Section -->
+                    <div id="single-input-section" class="sequence-input-section" style="display: none;">
+                        <input type="text" id="sequence-name" placeholder="Sequence name" style="width: 100%; margin-bottom: 8px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                        <textarea id="single-sequence-textarea" class="sequence-textarea" placeholder="Enter protein sequence...&#10;MKLLILLVALLMLAATVFAAAAKKVFGRC..."></textarea>
+                        <button id="add-single-sequence-btn">Add Sequence</button>
+                    </div>
+                    
+                    <!-- Parsed Sequences List -->
+                    <div id="parsed-sequences-section" style="display: none;">
+                        <h4 style="margin-bottom: 8px; font-size: 14px;">Parsed Sequences (<span id="sequence-count">0</span>)</h4>
+                        <div id="sequence-list" class="sequence-list">
+                            <!-- Sequences will be populated here -->
+                        </div>
+                        <button id="fold-all-btn" style="margin-bottom: 8px;">Fold All with ESMFold</button>
+                        <button id="clear-sequences-btn" class="button secondary" style="font-size: 12px; padding: 6px 12px;">Clear All</button>
+                    </div>
+                    
+                    <!-- Align Mode Section -->
+                    <div id="align-mode-section" class="align-mode-section">
+                        <h4 style="margin-bottom: 10px; font-size: 14px;">Display Mode</h4>
+                        <div class="align-mode-options">
+                            <label style="display: block; margin-bottom: 8px;">
+                                <input type="radio" name="align-mode" id="dual-session-radio" value="dual" checked>
+                                <span style="margin-left: 8px; color: hsl(220, 9%, 46%);">Dual Session (default)</span>
+                            </label>
+                            <div style="font-size: 11px; color: hsl(220, 9%, 46%); margin-left: 20px; margin-bottom: 8px;">
+                                Original structure on left, predicted on right
+                            </div>
+                            
+                            <label style="display: block; margin-bottom: 8px;">
+                                <input type="radio" name="align-mode" id="seq-only-radio" value="seq-only">
+                                <span style="margin-left: 8px; color: hsl(220, 9%, 46%);">Seq Structure Only</span>
+                            </label>
+                            <div style="font-size: 11px; color: hsl(220, 9%, 46%); margin-left: 20px; margin-bottom: 8px;">
+                                Show only predicted structure from selected sequence
+                            </div>
+                            
+                            <label style="display: block; margin-bottom: 8px;">
+                                <input type="radio" name="align-mode" id="align-mode-radio" value="align">
+                                <span style="margin-left: 8px; color: hsl(220, 9%, 46%);">Align Mode</span>
+                            </label>
+                            <div style="font-size: 11px; color: hsl(220, 9%, 46%); margin-left: 20px;">
+                                Both structures in single session for manual alignment
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- pLDDT Confidence Coloring Information (Subsection) -->
+                    <div class="plddt-info-section">
+                        <div class="plddt-info-header">
+                            <h4>pLDDT Confidence Info</h4>
+                            <label class="plddt-info-switch">
+                                <input type="checkbox" id="plddt-info-toggle">
+                                <span class="plddt-info-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div id="plddt-info-content" class="plddt-info-content">
+                            <div class="plddt-info-panel">
+                                <div class="plddt-description">
+                                    Predicted structures are colored by confidence (pLDDT score):
+                                </div>
+                                <div class="plddt-legend">
+                                    <div class="plddt-item">
+                                        <div class="plddt-color" style="background: #0053D6;"></div>
+                                        <span>Very High (>90)</span>
+                                    </div>
+                                    <div class="plddt-item">
+                                        <div class="plddt-color" style="background: #65CBF3;"></div>
+                                        <span>Confident (70-90)</span>
+                                    </div>
+                                    <div class="plddt-item">
+                                        <div class="plddt-color" style="background: #FFDB13;"></div>
+                                        <span>Low (50-70)</span>
+                                    </div>
+                                    <div class="plddt-item">
+                                        <div class="plddt-color" style="background: #FF7D45;"></div>
+                                        <span>Very Low (<50)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="status"> Atoms: <span id="atom-count">0</span> </div>
+            <div id="animation-controls" style="display: none;">
+                <h3>Diffusion Animation</h3>
+                <div id="frame-info">Step: <span id="current-step">0</span> / <span id="total-steps">0</span></div>
+                <input type="range" id="animation-slider" min="0" max="0" value="0">
+                
+                <!-- Main Animation Controls -->
+                <div class="animation-main-controls">
+                    <button id="prev-frame" class="control-btn step-btn" title="Previous Frame">⏮</button>
+                    <button id="play-pause" class="control-btn play-btn" title="Play/Pause">▶</button>
+                    <button id="next-frame" class="control-btn step-btn" title="Next Frame">⏭</button>
+                </div>
+                
+                <!-- Playback Direction Controls -->
+                <div class="direction-label">Direction</div>
+                <div class="animation-direction-controls">
+                    <button id="play-backward" class="control-btn direction-btn" title="Play Backward">&lt;&lt;</button>
+                    <button id="play-forward" class="control-btn direction-btn" title="Play Forward">&gt;&gt;</button>
+                </div>
+                
+                <!-- Speed Control -->
+                <div class="slider-container">
+                    <label for="animation-speed">Speed: <span id="animation-speed-value">1.0</span>x</label>
+                    <input type="range" id="animation-speed" min="0.1" max="5.0" step="0.1" value="1.0">
+                </div>
+                
+                <!-- Download Controls -->
+                <div class="animation-download-controls">
+                    <button id="download-animation" class="control-btn download-btn" title="Download Animation">📥 Download</button>
+                    <div id="download-options" class="download-options" style="display: none;">
+                        <button id="download-mp4" class="download-option">Video (WebM/MP4)</button>
+                        <button id="download-gif" class="download-option">Frame ZIP</button>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div id="file-list-panel">
+             <div id="file-list-header">
+                <h3>Loaded Files</h3>
+                <button id="toggle-file-list" title="Collapse File List">[−]</button>
+            </div>
+            <div id="file-history">No files loaded.</div>
+        </div>
+
+        <div id="loading">Loading...</div>
+        <div id="viewer-container"></div>
+        <div id="dual-session-container">
+            <div class="dual-viewers">
+                <div class="dual-viewer-panel">
+                    <div class="dual-viewer-header" id="left-viewer-header">Original Structure</div>
+                    <div class="dual-viewer-content" id="left-viewer"></div>
+                </div>
+                <div class="dual-viewer-panel">
+                    <div class="dual-viewer-header" id="right-viewer-header">Predicted Structure</div>
+                    <div class="dual-viewer-content" id="right-viewer"></div>
+                </div>
+            </div>
+        </div>
+        <div id="grid-container">
+            <div id="grid-content" class="grid-view"></div>
+        </div>
+    </div>
+
+    <script>
+        // VSCode API for communication
+        const vscode = acquireVsCodeApi();
+        
+        // VSCode Integration Functions
+        function requestPDBFiles() {
+            vscode.postMessage({
+                command: 'requestPDBFiles'
+            });
+        }
+        
+        function requestFolder() {
+            vscode.postMessage({
+                command: 'requestFolder'
+            });
+        }
+        
+        // requestFASTA function removed - use FASTA upload in Seq Alignment section instead
+        
+        // Toggle download options visibility
+        function toggleDownloadOptions() {
+            const options = document.getElementById('download-options');
+            const isVisible = options.style.display === 'flex';
+            options.style.display = isVisible ? 'none' : 'flex';
+        }
+        
+        // Download animation functionality - fixed to use VSCode save dialog
+        async function downloadAnimation(format) {
+            if (diffusionSteps.length === 0) {
+                vscode.postMessage({
+                    command: 'showError',
+                    message: 'No diffusion sequence loaded to download'
+                });
+                return;
+            }
+            
+            const downloadBtn = document.getElementById('download-animation');
+            const originalText = downloadBtn.textContent;
+            downloadBtn.textContent = 'Recording...';
+            downloadBtn.disabled = true;
+            
+            try {
+                if (format === 'mp4') {
+                    await recordMP4Animation();
+                } else if (format === 'gif') {
+                    await recordGIFAnimation();
+                }
+                
+                // Show success message briefly
+                downloadBtn.textContent = 'Downloaded!';
+                setTimeout(() => {
+                    downloadBtn.textContent = originalText;
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error recording animation:', error);
+                vscode.postMessage({
+                    command: 'showError',
+                    message: 'Error recording animation: ' + error.message
+                });
+                downloadBtn.textContent = originalText;
+            } finally {
+                downloadBtn.disabled = false;
+                toggleDownloadOptions(); // Hide options after download
+            }
+        }
+        
+        // Record MP4 animation - fixed to use VSCode save dialog
+        async function recordMP4Animation() {
+            const canvas = document.querySelector('#viewer-container canvas');
+            if (!canvas) {
+                throw new Error('No canvas found for recording');
+            }
+            
+            // Try different mime types for better compatibility and quality
+            const mimeTypes = [
+                'video/webm;codecs=vp9',
+                'video/webm;codecs=vp8',
+                'video/webm',
+                'video/mp4'
+            ];
+            
+            let selectedMimeType = null;
+            for (const mimeType of mimeTypes) {
+                if (MediaRecorder.isTypeSupported(mimeType)) {
+                    selectedMimeType = mimeType;
+                    break;
+                }
+            }
+            
+            if (!selectedMimeType) {
+                throw new Error('No supported video format found in this browser');
+            }
+            
+            const stream = canvas.captureStream(60); // Higher FPS for better quality
+            const recorder = new MediaRecorder(stream, { 
+                mimeType: selectedMimeType,
+                videoBitsPerSecond: 8000000 // 8 Mbps for better quality
+            });
+            const chunks = [];
+            
+            recorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    chunks.push(event.data);
+                }
+            };
+            
+            return new Promise((resolve, reject) => {
+                recorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: selectedMimeType });
+                    
+                    // Convert blob to base64 for VSCode
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        const base64Data = reader.result.split(',')[1]; // Remove data:video/webm;base64, prefix
+                        
+                        // Determine file extension based on mime type
+                        let extension = 'webm';
+                        if (selectedMimeType.includes('mp4')) {
+                            extension = 'mp4';
+                        }
+                        
+                        // Send to VSCode for saving
+                        vscode.postMessage({
+                            command: 'downloadVideoFile',
+                            data: base64Data,
+                            filename: `diffusion_animation_${Date.now()}.${extension}`,
+                            mimeType: selectedMimeType
+                        });
+                        
+                        resolve();
+                    };
+                    reader.readAsDataURL(blob);
+                };
+                
+                recorder.onerror = reject;
+                recorder.start();
+                
+                // Record animation by stepping through frames
+                recordAnimationFrames(recorder);
+            });
+        }
+        
+        // Record GIF animation using canvas frames
+        async function recordGIFAnimation() {
+            // Use a client-side GIF creation approach to avoid CORS issues
+            const canvas = document.querySelector('#viewer-container canvas');
+            if (!canvas) {
+                throw new Error('No canvas found for recording');
+            }
+            
+            // Create a simple GIF encoder without external workers
+            const frames = [];
+            const frameDelay = Math.max(1000 / (5 * animationSpeed), 100); // Min 100ms delay
+            
+            // Capture all frames first
+            for (let frameIndex = 0; frameIndex < diffusionSteps.length; frameIndex++) {
+                displayDiffusionStep(frameIndex, true);
+                await new Promise(resolve => setTimeout(resolve, 100)); // Wait for rendering
+                
+                // Convert canvas to image data
+                const imageData = canvas.toDataURL('image/png');
+                frames.push(imageData);
+            }
+            
+            // Create ZIP using VSCode save dialog
+            if (frames.length > 0) {
+                const zip = await createFrameZip(frames);
+                
+                // Convert ZIP blob to base64 for VSCode
+                const reader = new FileReader();
+                reader.onload = function() {
+                    const base64Data = reader.result.split(',')[1]; // Remove data:application/zip;base64, prefix
+                    
+                    // Send to VSCode for saving
+                    vscode.postMessage({
+                        command: 'downloadZipFile',
+                        data: base64Data,
+                        filename: `diffusion_frames_${Date.now()}.zip`
+                    });
+                };
+                reader.readAsDataURL(zip);
+            }
+        }
+        
+        // Create a ZIP file with all frames
+        async function createFrameZip(frames) {
+            // Import JSZip library dynamically
+            if (typeof JSZip === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+                document.head.appendChild(script);
+                
+                await new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error('Failed to load JSZip library'));
+                });
+            }
+            
+            const zip = new JSZip();
+            
+            frames.forEach((frame, index) => {
+                // Convert data URL to blob
+                const byteString = atob(frame.split(',')[1]);
+                const mimeString = frame.split(',')[0].split(':')[1].split(';')[0];
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                const blob = new Blob([ab], {type: mimeString});
+                
+                zip.file(`frame_${String(index).padStart(4, '0')}.png`, blob);
+            });
+            
+            return await zip.generateAsync({type: 'blob'});
+        }
+        
+        // Record animation frames for MP4
+        function recordAnimationFrames(recorder) {
+            let frameIndex = 0;
+            const frameDelay = Math.max(1000 / (5 * animationSpeed), 50); // Min 50ms delay
+            
+            const nextFrame = () => {
+                if (frameIndex >= diffusionSteps.length) {
+                    // Add a small delay before stopping to ensure last frame is captured
+                    setTimeout(() => recorder.stop(), 200);
+                    return;
+                }
+                
+                displayDiffusionStep(frameIndex, true);
+                frameIndex++;
+                
+                setTimeout(nextFrame, frameDelay);
+            };
+            
+            nextFrame();
+        }
+        
+        // Listen for messages from VSCode
+        window.addEventListener('message', async event => {
+            const message = event.data;
+            switch (message.command) {
+                case 'loadPDBFiles':
+                    await handleVSCodePDBFiles(message.files);
+                    break;
+                case 'loadFolder':
+                    await handleVSCodeFolder(message.files);
+                    break;
+                case 'loadFASTA':
+                    handleVSCodeFASTA(message.content);
+                    break;
+                case 'clearFiles':
+                    clearAllFiles();
+                    break;
+            }
+        });
+        
+        // Handle PDB files from VSCode
+        async function handleVSCodePDBFiles(files) {
+            const loadingIndicator = document.getElementById('loading');
+            loadingIndicator.textContent = `Loading ${files.length} file(s)...`;
+            loadingIndicator.style.display = 'block';
+            
+            // Wait for viewer to be ready before processing files
+            if (!viewer) {
+                loadingIndicator.textContent = 'Initializing viewer...';
+                let retries = 0;
+                while (!viewer && retries < 100) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    retries++;
+                }
+                
+                if (!viewer) {
+                    loadingIndicator.textContent = 'Failed to initialize viewer';
+                    loadingIndicator.style.display = 'none';
+                    vscode.postMessage({
+                        command: 'showError',
+                        message: 'Viewer not ready. Please try again in a moment.'
+                    });
+                    return;
+                }
+                
+                loadingIndicator.textContent = `Loading ${files.length} file(s)...`;
+            }
+            
+            try {
+                let firstNewFileName = null;
+                
+                files.forEach(file => {
+                    if (!firstNewFileName) {
+                        firstNewFileName = file.name;
+                    }
+                    
+                    // Determine format
+                    let format = 'pdb';
+                    if (file.name.toLowerCase().endsWith('.cif') || file.name.toLowerCase().endsWith('.mmcif')) {
+                        format = 'mmcif';
+                    }
+                    
+                    loadedFiles.push({
+                        name: file.name,
+                        data: file.content,
+                        format: format
+                    });
+                });
+                
+                // Sort files naturally
+                loadedFiles.sort((a, b) => naturalSort(a.name, b.name));
+                
+                // Find and display first file
+                currentFileIndex = loadedFiles.findIndex(f => f.name === firstNewFileName);
+                if (currentFileIndex === -1 && loadedFiles.length > 0) {
+                    currentFileIndex = 0;
+                }
+                
+                if (currentFileIndex !== -1) {
+                    parseStructureFile(
+                        loadedFiles[currentFileIndex].data,
+                        loadedFiles[currentFileIndex].format,
+                        false
+                    );
+                }
+                
+                updateFileHistory();
+                document.getElementById('animation-controls').style.display = 'none';
+                stopAnimation();
+                
+            } catch (error) {
+                console.error("Error loading files from VSCode:", error);
+                vscode.postMessage({
+                    command: 'showError',
+                    message: 'Error loading files: ' + error.message
+                });
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+        
+        // Handle folder from VSCode
+        async function handleVSCodeFolder(files) {
+            const loadingIndicator = document.getElementById('loading');
+            loadingIndicator.textContent = 'Loading diffusion sequence...';
+            loadingIndicator.style.display = 'block';
+            
+            // Wait for viewer to be ready before processing files
+            if (!viewer) {
+                loadingIndicator.textContent = 'Initializing viewer...';
+                let retries = 0;
+                while (!viewer && retries < 100) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    retries++;
+                }
+                
+                if (!viewer) {
+                    loadingIndicator.textContent = 'Failed to initialize viewer';
+                    loadingIndicator.style.display = 'none';
+                    vscode.postMessage({
+                        command: 'showError',
+                        message: 'Viewer not ready. Please try again in a moment.'
+                    });
+                    return;
+                }
+                
+                loadingIndicator.textContent = 'Loading diffusion sequence...';
+            }
+            
+            try {
+                diffusionSteps = [];
+                stopAnimation();
+                
+                files.forEach(file => {
+                    // Determine format
+                    let format = 'pdb';
+                    if (file.name.toLowerCase().endsWith('.cif') || file.name.toLowerCase().endsWith('.mmcif')) {
+                        format = 'mmcif';
+                    }
+                    
+                    const stepMatch = file.name.match(/(\d+)/);
+                    const stepNum = stepMatch ? parseInt(stepMatch[1]) : diffusionSteps.length;
+                    
+                    diffusionSteps.push({
+                        name: file.name,
+                        step: stepNum,
+                        data: file.content,
+                        format: format
+                    });
+                    
+                    // Add to main list if not already present
+                    if (!loadedFiles.some(f => f.name === file.name)) {
+                        loadedFiles.push({
+                            name: file.name,
+                            data: file.content,
+                            format: format
+                        });
+                    }
+                });
+                
+                if (diffusionSteps.length > 0) {
+                    // Sort diffusion steps by step number
+                    diffusionSteps.sort((a, b) => a.step - b.step);
+                    
+                    // Sort main files list
+                    loadedFiles.sort((a, b) => naturalSort(a.name, b.name));
+                    
+                    // Find and display first step
+                    currentFileIndex = loadedFiles.findIndex(f => f.name === diffusionSteps[0].name);
+                    if (currentFileIndex === -1) {
+                        currentFileIndex = 0;
+                    }
+                    
+                    currentStepIndex = 0;
+                    displayDiffusionStep(currentStepIndex, false);
+                    
+                    updateFileHistory();
+                    initializeAnimationControls();
+                }
+                
+            } catch (error) {
+                console.error("Error loading folder from VSCode:", error);
+                vscode.postMessage({
+                    command: 'showError',
+                    message: 'Error loading folder: ' + error.message
+                });
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+        
+        // Handle FASTA from VSCode
+        function handleVSCodeFASTA(content) {
+            document.getElementById('fasta-textarea').value = content;
+            parseFastaInput();
+        }
+        
+        // Clear all files
+        function clearAllFiles() {
+            loadedFiles = [];
+            diffusionSteps = [];
+            currentFileIndex = -1;
+            currentStepIndex = 0;
+            stopAnimation();
+            
+            if (viewer) {
+                viewer.plugin.clear();
+            }
+            
+            updateFileHistory();
+            document.getElementById('animation-controls').style.display = 'none';
+            document.getElementById('atom-count').textContent = '0';
+        }
+        
+        // Main variables for 3DMol.js
+        let viewer;
+        // Sphere variables removed - using cartoon mode only
+        // Cartoon thickness and opacity controls removed
+        let loadedFiles = [];
+        let currentFileIndex = -1;
+        let diffusionSteps = [];
+        let currentStepIndex = 0;
+        let isPlaying = false;
+        let playDirection = 1;
+        let animationSpeed = 1.0;
+        let animationTimer = null;
+        // View mode fixed to cartoon only
+        let currentColorMode = 'custom'; // 'custom', 'element', 'residue', 'chain'
+        let currentCustomColor = '#4ECDC4'; // Default teal color
+        let currentModels = []; // Store current 3DMol models
+        let currentLayoutMode = 'single'; // 'single' or 'grid'
+        let gridViewers = []; // Store grid viewers
+        let expandedGridItem = null; // Track expanded grid item
+        let activeGridViewers = new Set(); // Track which grid viewers are active
+        let gridPreviewImages = []; // Store preview images for grid items
+        let gridViewerOrder = []; // Track order of activation for LRU management
+        
+        // Sequence alignment variables
+        let sequenceAlignmentEnabled = false;
+        let currentInputMode = 'fasta'; // 'fasta' or 'single'
+        let parsedSequences = []; // Array of parsed sequences
+        let selectedSequenceIndex = -1;
+        let currentDisplayMode = 'dual'; // 'dual', 'seq-only', or 'align'
+        let sequenceStructures = []; // Store structures for each sequence
+        let predictedStructureIds = new Set(); // Track which structures are predicted (should keep pLDDT coloring)
+        
+        // Dual session variables
+        let leftViewer = null; // Viewer for original structure
+        let rightViewer = null; // Viewer for predicted structure
+        let currentSessionMode = 'single'; // 'single', 'dual', 'align'
+        
+        // Color palettes
+        const customColors = {
+            '#4ECDC4': 'teal',
+            '#FF6B6B': 'red',
+            '#4DABF7': 'blue', 
+            '#69DB7C': 'green',
+            '#FFD93D': 'yellow',
+            '#FF922B': 'orange',
+            '#DA77F2': 'purple',
+            '#FF8CC8': 'pink',
+            '#15AABF': 'cyan',
+            '#868E96': 'gray'
+        };
+
+        // --- Natural Sort Function ---
+        function naturalSort(a, b) {
+            const ax = [], bx = [];
+            a.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { ax.push([$1 || Infinity, $2 || ""]) });
+            b.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { bx.push([$1 || Infinity, $2 || ""]) });
+            while(ax.length && bx.length) {
+                const an = ax.shift();
+                const bn = bx.shift();
+                const nn = (an[0] - bn[0]) || an[1].localeCompare(bn[1]);
+                if(nn) return nn;
+            }
+            return ax.length - bx.length;
+        }
+
+        // Helper Function to Read File
+        function readFileAsText(file) {
+             return new Promise((resolve, reject) => {
+                 const reader = new FileReader();
+                 reader.onload = (event) => {
+                     // Determine file format
+                     let format = 'unknown';
+                     if (file.name.toLowerCase().endsWith('.pdb')) {
+                         format = 'pdb';
+                     } else if (file.name.toLowerCase().endsWith('.cif')) {
+                         format = 'mmcif';
+                     }
+                     resolve({ 
+                         name: file.name, 
+                         data: event.target.result,
+                         format: format
+                     });
+                 };
+                 reader.onerror = (error) => reject(error);
+                 reader.readAsText(file);
+             });
+        }
+
+        // Init function
+        async function init() {
+            // Wait for DOM to be ready
+            if (document.readyState !== 'complete') {
+                await new Promise(resolve => {
+                    if (document.readyState === 'complete') {
+                        resolve();
+                    } else {
+                        window.addEventListener('load', resolve, { once: true });
+                    }
+                });
+            }
+            
+            // Wait for Molstar to be available
+            let retries = 0;
+            while (typeof molstar === 'undefined' && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+            
+            if (typeof molstar === 'undefined') {
+                console.error('Molstar failed to load after 5 seconds');
+                alert('Failed to load Molstar library. Please check your internet connection.');
+                return;
+            }
+            
+            // Initialize Molstar viewer
+            const viewerContainer = document.getElementById('viewer-container');
+            if (!viewerContainer) {
+                console.error('Viewer container not found');
+                return;
+            }
+            
+            try {
+                viewer = await molstar.Viewer.create('viewer-container', {
+                    layoutIsExpanded: false,
+                    layoutShowControls: false,
+                    layoutShowLeftPanel: false,
+                    layoutShowSequence: false,
+                    layoutShowLog: false,
+                    viewportShowExpand: false,
+                    viewportShowSelectionMode: false,
+                    viewportShowAnimation: false
+                });
+                
+                console.log('Molstar viewer initialized successfully');
+                
+                // Notify VSCode that webview is ready
+                vscode.postMessage({
+                    command: 'webviewReady'
+                });
+                
+            } catch (error) {
+                console.error('Failed to initialize Molstar viewer:', error);
+                alert('Failed to initialize viewer: ' + error.message);
+                return;
+            }
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('keydown', handleKeyDown);
+            document.getElementById('reset-view').addEventListener('click', resetView);
+            
+            // View mode is now fixed to cartoon mode only
+            
+            // Layout mode controls
+            document.getElementById('single-view').addEventListener('click', () => setLayoutMode('single'));
+            document.getElementById('grid-view').addEventListener('click', () => setLayoutMode('grid'));
+            
+            // Cartoon controls removed per requirements
+            
+            // Sphere controls removed - using cartoon mode only
+            
+            // Color controls
+            document.getElementById('color-custom').addEventListener('click', () => changeColorMode('custom'));
+            document.getElementById('color-by-element').addEventListener('click', () => changeColorMode('element'));
+            document.getElementById('color-by-residue').addEventListener('click', () => changeColorMode('residue'));
+            document.getElementById('color-by-chain').addEventListener('click', () => changeColorMode('chain'));
+            
+            // Color palette
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    const color = option.dataset.color;
+                    selectCustomColor(color);
+                });
+            });
+            
+            // VSCode Integration Event Listeners
+            document.getElementById('request-pdb-files').addEventListener('click', requestPDBFiles);
+            document.getElementById('request-folder').addEventListener('click', requestFolder);
+            
+            // Animation controls
+            document.getElementById('animation-slider').addEventListener('input', handleAnimationSlider);
+            document.getElementById('play-pause').addEventListener('click', togglePlayPause);
+            document.getElementById('play-forward').addEventListener('click', playForward);
+            document.getElementById('play-backward').addEventListener('click', playBackward);
+            document.getElementById('next-frame').addEventListener('click', nextFrame);
+            document.getElementById('prev-frame').addEventListener('click', prevFrame);
+            document.getElementById('animation-speed').addEventListener('input', updateAnimationSpeed);
+            
+            // Download controls
+            document.getElementById('download-animation').addEventListener('click', toggleDownloadOptions);
+            document.getElementById('download-mp4').addEventListener('click', () => downloadAnimation('mp4'));
+            document.getElementById('download-gif').addEventListener('click', () => downloadAnimation('gif'));
+            
+            // Sequence alignment event listeners
+            document.getElementById('seq-alignment-toggle').addEventListener('change', toggleSequenceAlignment);
+            document.getElementById('fasta-mode').addEventListener('click', () => setInputMode('fasta'));
+            document.getElementById('single-mode').addEventListener('click', () => setInputMode('single'));
+            document.getElementById('upload-fasta-btn').addEventListener('click', () => document.getElementById('fasta-file-input').click());
+            document.getElementById('fasta-file-input').addEventListener('change', handleFastaFileUpload);
+            document.getElementById('parse-fasta-btn').addEventListener('click', parseFastaInput);
+            document.getElementById('add-single-sequence-btn').addEventListener('click', addSingleSequence);
+            document.getElementById('fold-all-btn').addEventListener('click', foldAllSequences);
+            document.getElementById('clear-sequences-btn').addEventListener('click', clearAllSequences);
+            document.getElementById('dual-session-radio').addEventListener('change', handleDisplayModeChange);
+            document.getElementById('seq-only-radio').addEventListener('change', handleDisplayModeChange);
+            document.getElementById('align-mode-radio').addEventListener('change', handleDisplayModeChange);
+            document.getElementById('plddt-info-toggle').addEventListener('change', togglePLDDTInfo);
+
+            // --- Collapse Button Listeners ---
+            const toggleButton = document.getElementById('toggle-file-list');
+            const fileHistoryEl = document.getElementById('file-history');
+            const fileListPanel = document.getElementById('file-list-panel');
+            
+            toggleButton.addEventListener('click', () => {
+                const isCollapsed = fileListPanel.classList.toggle('collapsed');
+                toggleButton.textContent = isCollapsed ? '[+]' : '[−]';
+                toggleButton.title = isCollapsed ? 'Expand File List' : 'Collapse File List';
+                
+                // Also handle the file history collapse state
+                if (isCollapsed) {
+                    fileHistoryEl.classList.add('collapsed');
+                } else {
+                    fileHistoryEl.classList.remove('collapsed');
+                }
+            });
+            
+            // Controls panel collapse listener
+            const toggleControlsButton = document.getElementById('toggle-controls');
+            const controlsPanel = document.getElementById('controls');
+            
+            toggleControlsButton.addEventListener('click', () => {
+                const isCollapsed = controlsPanel.classList.toggle('collapsed');
+                toggleControlsButton.textContent = isCollapsed ? '[+]' : '[−]';
+                toggleControlsButton.title = isCollapsed ? 'Expand Controls' : 'Collapse Controls';
+            });
+            
+            // Initialize UI state
+            // View mode UI update removed - cartoon only
+            updateColorModeUI();
+            selectCustomColor(currentCustomColor);
+            
+            // Notify VSCode that webview is ready
+            vscode.postMessage({
+                command: 'webviewReady'
+            });
+        }
+
+        // Animation loop (handled by Molstar internally)
+
+        // Window resize handler
+        function onWindowResize() {
+            if (viewer) {
+                viewer.handleResize();
+            }
+            document.getElementById('controls').style.maxHeight = `calc(100vh - 20px)`;
+            document.getElementById('file-list-panel').style.maxHeight = `calc(100vh - 20px)`;
+        }
+
+        // Reset camera view
+        function resetView() {
+            if (viewer) {
+                viewer.plugin.managers.camera.reset();
+            }
+        }
+
+        // Handle Batch File Select (with sorting)
+        async function handleBatchFileSelect(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            const loadingIndicator = document.getElementById('loading');
+            loadingIndicator.textContent = `Loading ${files.length} file(s)...`;
+            loadingIndicator.style.display = 'block';
+
+            const readFilePromises = Array.from(files).map(file => readFileAsText(file));
+            let firstNewFileName = null; // Keep track of the first file added in this batch
+
+            try {
+                const results = await Promise.all(readFilePromises);
+
+                if (results.length > 0) {
+                    firstNewFileName = results[0].name; // Get name before potential duplicates are added
+                    results.forEach(result => {
+                        // Add even if duplicate name exists, per previous request
+                        loadedFiles.push({ 
+                            name: result.name, 
+                            data: result.data,
+                            format: result.format 
+                        });
+                    });
+
+                    // --- Sort the list ---
+                    loadedFiles.sort((a, b) => naturalSort(a.name, b.name));
+
+                    // --- Find the new index of the first added file ---
+                    currentFileIndex = loadedFiles.findIndex(f => f.name === firstNewFileName);
+                    // If somehow not found (e.g., error during read?), default to 0 if list not empty
+                    if (currentFileIndex === -1 && loadedFiles.length > 0) {
+                        currentFileIndex = 0;
+                    }
+
+                    // Display the selected file
+                    if (currentFileIndex !== -1) {
+                        parseStructureFile(
+                            loadedFiles[currentFileIndex].data, 
+                            loadedFiles[currentFileIndex].format, 
+                            false
+                        ); // Don't maintain view
+                    }
+
+                    updateFileHistory();
+                    document.getElementById('animation-controls').style.display = 'none';
+                    stopAnimation();
+                } else {
+                     updateFileHistory(); // Update even if no files added
+                }
+
+            } catch (error) {
+                console.error("Error reading one or more files:", error);
+                alert("An error occurred while reading files. Check the console.");
+                updateFileHistory(); // Update list even if errors occurred
+            } finally {
+                loadingIndicator.style.display = 'none';
+                event.target.value = null;
+            }
+        }
+
+        // Handle folder selection for diffusion sequence (with sorting)
+        async function handleFolderSelect(event) {
+             const files = event.target.files;
+             if (!files || files.length === 0) return;
+             const loadingIndicator = document.getElementById('loading');
+             loadingIndicator.textContent = 'Loading diffusion sequence...';
+             loadingIndicator.style.display = 'block';
+
+             diffusionSteps = []; // Clear previous sequence
+             stopAnimation();
+
+             // Filter for structure files
+             const structureFilesInput = Array.from(files).filter(file => {
+                 const lowerName = file.name.toLowerCase();
+                 return lowerName.endsWith('.pdb') || lowerName.endsWith('.cif');
+             });
+             
+             if (structureFilesInput.length === 0) {
+                 loadingIndicator.style.display = 'none';
+                 alert('No PDB or mmCIF files found in the selected folder.');
+                 return;
+             }
+
+             const readFilePromises = structureFilesInput.map(file => readFileAsText(file));
+             let firstStepFileName = null; // Keep track of the intended first step file
+
+             try {
+                 const results = await Promise.all(readFilePromises);
+                 let newFilesAddedToMainList = false;
+
+                 results.forEach(result => {
+                     const stepMatch = result.name.match(/(\d+)/);
+                     const stepNum = stepMatch ? parseInt(stepMatch[1]) : diffusionSteps.length;
+                     diffusionSteps.push({ 
+                         name: result.name, 
+                         step: stepNum, 
+                         data: result.data,
+                         format: result.format 
+                     });
+
+                     // Add to main list if not already present
+                     if (!loadedFiles.some(f => f.name === result.name)) {
+                         loadedFiles.push({ 
+                             name: result.name, 
+                             data: result.data,
+                             format: result.format 
+                         });
+                         newFilesAddedToMainList = true;
+                     }
+                 });
+
+                 if (diffusionSteps.length > 0) {
+                     // Sort diffusion steps by step number
+                     diffusionSteps.sort((a, b) => a.step - b.step);
+                     firstStepFileName = diffusionSteps[0].name; // Name of the file to be displayed first
+
+                     // --- Sort the main loadedFiles list if new files were added ---
+                     if (newFilesAddedToMainList) {
+                         loadedFiles.sort((a, b) => naturalSort(a.name, b.name));
+                     }
+
+                     // --- Find the index of the first step file in the (potentially sorted) main list ---
+                     currentFileIndex = loadedFiles.findIndex(f => f.name === firstStepFileName);
+                     if (currentFileIndex === -1) { // Fallback if something went wrong
+                          console.warn("Could not find first step file in loadedFiles list after sorting.");
+                          currentFileIndex = 0; // Default to first in list
+                     }
+
+                     // Display the first step
+                     currentStepIndex = 0; // Index within diffusionSteps array
+                     displayDiffusionStep(currentStepIndex, false); // Don't maintain view for first frame
+
+                     updateFileHistory();
+                     initializeAnimationControls();
+                 } else {
+                     updateFileHistory();
+                 }
+
+             } catch (error) {
+                 console.error("Error reading files for diffusion sequence:", error);
+                 alert("An error occurred while reading sequence files. Check console.");
+                 updateFileHistory();
+             } finally {
+                 loadingIndicator.style.display = 'none';
+                 event.target.value = null;
+             }
+         }
+
+        // Initialize animation controls
+        function initializeAnimationControls() {
+            if (diffusionSteps.length === 0) {
+                 document.getElementById('animation-controls').style.display = 'none';
+                 return;
+            }
+            const slider = document.getElementById('animation-slider');
+            slider.min = 0;
+            slider.max = diffusionSteps.length - 1;
+            slider.value = currentStepIndex;
+            document.getElementById('current-step').textContent = diffusionSteps[currentStepIndex]?.step ?? 'N/A';
+            document.getElementById('total-steps').textContent = diffusionSteps[diffusionSteps.length - 1]?.step ?? 'N/A';
+            document.getElementById('animation-controls').style.display = 'block';
+            
+            // Initialize button states
+            playDirection = 1; // Default to forward
+            updateDirectionButtons();
+            stopAnimation();
+        }
+
+        // Display a specific diffusion step
+        // **Important**: Needs to update `currentFileIndex` after identifying the file
+        function displayDiffusionStep(index, maintainView = true) {
+            if (index < 0 || index >= diffusionSteps.length) return;
+            currentStepIndex = index;
+            const stepData = diffusionSteps[index];
+            document.getElementById('animation-slider').value = index;
+            document.getElementById('current-step').textContent = stepData.step;
+
+            // --- Update currentFileIndex based on the step being displayed ---
+            const correspondingFileIndex = loadedFiles.findIndex(file => file.name === stepData.name);
+            if (correspondingFileIndex !== -1) {
+                currentFileIndex = correspondingFileIndex; // Keep main list selection synced
+            } else {
+                 console.warn(`Could not find file ${stepData.name} in loadedFiles.`);
+                 // Optionally deselect in main list: currentFileIndex = -1;
+            }
+
+            // Handle dual session mode for diffusion steps too
+            (async () => {
+                if (currentSessionMode === 'dual' && sequenceAlignmentEnabled) {
+                    // Find if current file has a corresponding sequence to maintain dual session
+                    const matchingSequence = parsedSequences.find(seq => {
+                        const match = findMatchingStructure(seq.header);
+                        return match && match.name === stepData.name;
+                    });
+                    
+                    if (matchingSequence && matchingSequence.status === 'completed') {
+                        // Update dual session with new file and its predicted structure
+                        await loadDualSessionStructures(matchingSequence, { name: stepData.name, data: stepData.data, format: stepData.format });
+                    } else {
+                        // No matching sequence, fall back to single mode
+                        await initializeSingleSessionMode();
+                        parseStructureFile(stepData.data, stepData.format, maintainView);
+                    }
+                } else {
+                    // Normal single session mode
+                    parseStructureFile(stepData.data, stepData.format, maintainView);
+                }
+            })();
+            
+            updateFileHistory(); // Update highlighting based on the NEW currentFileIndex
+        }
+
+        // Handle animation slider change
+        function handleAnimationSlider(event) {
+             const sliderValue = parseInt(event.target.value);
+             // Display step will handle updating currentFileIndex and history
+             displayDiffusionStep(sliderValue, true);
+              if (isPlaying) {
+                  togglePlayPause();
+              }
+        }
+
+        // Helper to stop animation cleanly
+        function stopAnimation() {
+             isPlaying = false;
+             const playBtn = document.getElementById('play-pause');
+             playBtn.textContent = '▶';
+             playBtn.classList.remove('playing');
+             if (animationTimer) {
+                 clearInterval(animationTimer);
+                 animationTimer = null;
+             }
+        }
+
+        // Toggle play/pause
+        function togglePlayPause() {
+            if (diffusionSteps.length === 0) return;
+            isPlaying = !isPlaying;
+            const playBtn = document.getElementById('play-pause');
+            
+            if (isPlaying) {
+                playBtn.textContent = '⏸';
+                playBtn.classList.add('playing');
+                const frameTime = 1000 / (5 * animationSpeed);
+                animationTimer = setInterval(() => {
+                    const nextIndex = currentStepIndex + playDirection;
+                    if (nextIndex < 0 || nextIndex >= diffusionSteps.length) {
+                        stopAnimation();
+                        return;
+                    }
+                    // displayDiffusionStep handles updating main index and history
+                    displayDiffusionStep(nextIndex, true);
+                }, Math.max(frameTime, 20));
+            } else {
+                stopAnimation();
+            }
+        }
+
+        // Play forward/backward, next/prev frame
+        function playForward() { 
+            if (diffusionSteps.length > 0) { 
+                playDirection = 1; 
+                updateDirectionButtons();
+                if (!isPlaying) togglePlayPause(); 
+            } 
+        }
+        function playBackward() { 
+            if (diffusionSteps.length > 0) { 
+                playDirection = -1; 
+                updateDirectionButtons();
+                if (!isPlaying) togglePlayPause(); 
+            } 
+        }
+        // **Important**: Needs displayDiffusionStep to update main index
+        function nextFrame() { if (diffusionSteps.length > 0) { if (isPlaying) stopAnimation(); const nextIndex = currentStepIndex + 1; if (nextIndex < diffusionSteps.length) displayDiffusionStep(nextIndex, true); } }
+        function prevFrame() { if (diffusionSteps.length > 0) { if (isPlaying) stopAnimation(); const prevIndex = currentStepIndex - 1; if (prevIndex >= 0) displayDiffusionStep(prevIndex, true); } }
+
+        // Update animation speed
+        function updateAnimationSpeed(event) {
+            animationSpeed = parseFloat(event.target.value);
+            document.getElementById('animation-speed-value').textContent = animationSpeed.toFixed(1);
+            if (isPlaying && animationTimer) {
+                stopAnimation();
+                togglePlayPause();
+            }
+        }
+        
+        // Update direction button styling
+        function updateDirectionButtons() {
+            const forwardBtn = document.getElementById('play-forward');
+            const backwardBtn = document.getElementById('play-backward');
+            
+            forwardBtn.classList.toggle('active', playDirection === 1);
+            backwardBtn.classList.toggle('active', playDirection === -1);
+        }
+        
+
+        // Function to determine file format from content
+        function detectFileFormat(content) {
+            // Check for mmCIF format - typically starts with "data_" or has "_atom_site." tags
+            if (content.includes('data_') || content.includes('_atom_site.')) {
+                return 'mmcif';
+            } 
+            // Otherwise assume PDB format
+            return 'pdb';
+        }
+
+        // Main parsing function using Molstar
+        async function parseStructureFile(fileData, format, maintainView = false) {
+            // Wait for viewer to be initialized
+            let retries = 0;
+            while (!viewer && retries < 100) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+                retries++;
+            }
+            
+            if (!viewer) {
+                console.error('Viewer not initialized after 5 seconds');
+                vscode.postMessage({
+                    command: 'showError',
+                    message: 'Viewer not ready. Please wait a moment and try again.'
+                });
+                return;
+            }
+            
+            try {
+                // Store current file data for refreshing
+                currentFileData = fileData;
+                currentFileFormat = format;
+                
+                // Verify file data exists and is valid
+                if (!fileData || typeof fileData !== 'string' || fileData.trim().length === 0) {
+                    throw new Error('Invalid or empty file data');
+                }
+                
+                // Clear existing structures
+                const plugin = viewer.plugin;
+                await plugin.clear();
+                
+                currentModels = [];
+                
+                // Verify or detect the format if not provided
+                const detectedFormat = format || detectFileFormat(fileData);
+                
+                // Create blob with proper MIME type
+                const mimeType = detectedFormat === 'mmcif' ? 'chemical/x-mmcif' : 'chemical/x-pdb';
+                const blob = new Blob([fileData], { type: mimeType });
+                const blobUrl = URL.createObjectURL(blob);
+                
+                try {
+                    // Use the plugin's data loading mechanism directly
+                    const data = await plugin.builders.data.download({
+                        url: blobUrl,
+                        isBinary: false
+                    });
+                    
+                    // Parse trajectory 
+                    const formatMapping = {
+                        'mmcif': 'mmcif',
+                        'pdb': 'pdb'
+                    };
+                    
+                    const molstarFormat = formatMapping[detectedFormat] || 'pdb';
+                    const trajectory = await plugin.builders.structure.parseTrajectory(data, molstarFormat);
+                    
+                    // Apply default preset
+                    await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
+                    
+                    // Store structure reference (for tracking)
+                    currentModels = ['loaded'];
+                    
+                    // Apply current color theme after loading structure
+                    await updateColorTheme(getColorThemeName(), getColorThemeParams());
+                    
+                    // Count atoms (approximate - Molstar doesn't easily expose atom count)
+                    document.getElementById('atom-count').textContent = 'Loaded';
+                    
+                    if (!maintainView) {
+                        viewer.plugin.managers.camera.reset();
+                    }
+                    
+                } finally {
+                    // Clean up blob URL
+                    URL.revokeObjectURL(blobUrl);
+                }
+                
+            } catch (error) {
+                console.error('Error parsing structure file:', error);
+                document.getElementById('atom-count').textContent = 0;
+                alert('Error loading structure: ' + error.message);
+            }
+        }
+
+        // Store current file data for reloading
+        let currentFileData = null;
+        let currentFileFormat = null;
+        
+        // Helper functions for color theme management
+        function getColorThemeName() {
+            switch (currentColorMode) {
+                case 'element': return 'element-symbol';
+                case 'residue': return 'residue-name';
+                case 'chain': return 'chain-id';
+                case 'custom': return 'uniform';
+                default: return 'uniform';
+            }
+        }
+
+        function getColorThemeParams() {
+            if (currentColorMode === 'custom') {
+                // Convert hex color to Molstar Color format
+                const hexValue = parseInt(currentCustomColor.replace('#', ''), 16);
+                return { value: hexValue };
+            }
+            return {};
+        }
+
+        // Update color theme efficiently without reloading structure
+        async function updateColorTheme(colorThemeName, colorParams = {}) {
+            if (!viewer) return;
+            
+            try {
+                const plugin = viewer.plugin;
+                const structures = plugin.managers.structure.hierarchy.current.structures;
+                
+                for (const structure of structures) {
+                    for (const component of structure.components) {
+                        if (component.representations) {
+                            for (const repr of component.representations) {
+                                const update = plugin.build().to(repr.cell).update({
+                                    ...repr.cell.transform.params,
+                                    colorTheme: { name: colorThemeName, params: colorParams }
+                                });
+                                await update.commit();
+                            }
+                        }
+                    }
+                }
+                
+                console.log('Color theme updated to:', colorThemeName);
+            } catch (error) {
+                console.error('Error updating color theme:', error);
+            }
+        }
+        
+        // Update color theme selectively, skipping predicted structures
+        async function updateColorThemeSelective(colorThemeName, colorParams = {}) {
+            if (!viewer) return;
+            
+            try {
+                const plugin = viewer.plugin;
+                const structures = plugin.managers.structure.hierarchy.current.structures;
+                
+                for (const structure of structures) {
+                    // Check if this structure is a predicted structure (should keep pLDDT coloring)
+                    const structureId = structure.cell.transform.ref;
+                    if (predictedStructureIds.has(structureId)) {
+                        console.log('Skipping color update for predicted structure:', structureId);
+                        continue; // Skip predicted structures
+                    }
+                    
+                    for (const component of structure.components) {
+                        if (component.representations) {
+                            for (const repr of component.representations) {
+                                const update = plugin.build().to(repr.cell).update({
+                                    ...repr.cell.transform.params,
+                                    colorTheme: { name: colorThemeName, params: colorParams }
+                                });
+                                await update.commit();
+                            }
+                        }
+                    }
+                }
+                
+                console.log('Selective color theme updated to:', colorThemeName, '(skipped predicted structures)');
+            } catch (error) {
+                console.error('Error updating selective color theme:', error);
+            }
+        }
+
+        // Refresh visualization based on current settings
+        async function refreshVisualization() {
+            if (!viewer || currentModels.length === 0) return;
+            
+            console.log('Refreshing visualization - Color:', currentColorMode);
+            
+            // Update color theme efficiently (no view mode changes needed - cartoon only)
+            // But skip predicted structures that should maintain pLDDT coloring
+            await updateColorThemeSelective(getColorThemeName(), getColorThemeParams());
+            
+            // Also update all grid viewers if in grid mode
+            if (currentLayoutMode === 'grid') {
+                await updateAllGridViewersColor();
+            }
+        }
+        
+        // Update colors for all active grid viewers
+        async function updateAllGridViewersColor() {
+            for (let i = 0; i < gridViewers.length; i++) {
+                if (gridViewers[i] && activeGridViewers.has(i)) {
+                    try {
+                        await applyColorThemeToViewer(gridViewers[i]);
+                    } catch (error) {
+                        console.error(`Error updating grid viewer ${i} color:`, error);
+                    }
+                }
+            }
+        }
+
+        // Cartoon control update functions removed per requirements
+        
+        // View mode management removed - cartoon only mode
+        
+        // Layout mode management
+        async function setLayoutMode(mode) {
+            currentLayoutMode = mode;
+            updateLayoutModeUI();
+            
+            if (mode === 'grid') {
+                // Auto-close all active grid viewers when switching to grid view
+                await closeAllActiveViewers();
+                await createGridView();
+            } else {
+                await exitGridView();
+            }
+        }
+        
+        function updateLayoutModeUI() {
+            const singleBtn = document.getElementById('single-view');
+            const gridBtn = document.getElementById('grid-view');
+            const container = document.getElementById('container');
+            
+            if (currentLayoutMode === 'single') {
+                singleBtn.classList.add('active');
+                gridBtn.classList.remove('active');
+                container.className = 'single-view';
+            } else {
+                singleBtn.classList.remove('active');
+                gridBtn.classList.add('active');
+                container.className = 'grid-view-mode';
+            }
+        }
+        
+        // Color mode management
+        async function changeColorMode(mode) {
+            currentColorMode = mode;
+            updateColorModeUI();
+            await refreshVisualization();
+        }
+        
+        function updateColorModeUI() {
+            const buttons = document.querySelectorAll('.color-mode-buttons button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            const activeBtn = document.getElementById(`color-${currentColorMode === 'custom' ? 'custom' : 'by-' + currentColorMode}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            const customColors = document.getElementById('custom-colors');
+            customColors.style.display = currentColorMode === 'custom' ? 'block' : 'none';
+        }
+        
+        async function selectCustomColor(color) {
+            currentCustomColor = color;
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            document.querySelector(`[data-color="${color}"]`).classList.add('active');
+            
+            if (currentColorMode === 'custom') {
+                await refreshVisualization();
+            }
+        }
+        
+        // Create offscreen viewer for generating preview images
+        async function createOffscreenViewer() {
+            // Create offscreen container
+            const offscreenDiv = document.createElement('div');
+            offscreenDiv.style.position = 'absolute';
+            offscreenDiv.style.top = '-9999px';
+            offscreenDiv.style.left = '-9999px';
+            offscreenDiv.style.width = '400px';
+            offscreenDiv.style.height = '400px';
+            document.body.appendChild(offscreenDiv);
+            
+            try {
+                const offscreenViewer = await molstar.Viewer.create(offscreenDiv, {
+                    layoutIsExpanded: false,
+                    layoutShowControls: false,
+                    layoutShowLeftPanel: false,
+                    layoutShowSequence: false,
+                    layoutShowLog: false,
+                    viewportShowExpand: false,
+                    viewportShowSelectionMode: false,
+                    viewportShowAnimation: false
+                });
+                
+                return { viewer: offscreenViewer, container: offscreenDiv };
+            } catch (error) {
+                document.body.removeChild(offscreenDiv);
+                throw error;
+            }
+        }
+        
+        // LRU Management Functions
+        function addToViewerOrder(index) {
+            // Remove if already exists
+            const existingIndex = gridViewerOrder.indexOf(index);
+            if (existingIndex !== -1) {
+                gridViewerOrder.splice(existingIndex, 1);
+            }
+            // Add to end (most recent)
+            gridViewerOrder.push(index);
+        }
+        
+        function removeFromViewerOrder(index) {
+            const existingIndex = gridViewerOrder.indexOf(index);
+            if (existingIndex !== -1) {
+                gridViewerOrder.splice(existingIndex, 1);
+            }
+        }
+        
+        async function closeOldestViewer() {
+            if (gridViewerOrder.length === 0) return null;
+            
+            const oldestIndex = gridViewerOrder[0]; // First in array is oldest
+            console.log(`Closing oldest viewer: ${oldestIndex}`);
+            
+            try {
+                // Dispose the viewer
+                if (gridViewers[oldestIndex] && gridViewers[oldestIndex].plugin) {
+                    await gridViewers[oldestIndex].plugin.clear();
+                    gridViewers[oldestIndex].plugin.dispose();
+                }
+                gridViewers[oldestIndex] = null;
+                
+                // Remove from active set and order
+                activeGridViewers.delete(oldestIndex);
+                removeFromViewerOrder(oldestIndex);
+                
+                // Revert to preview image
+                const gridItem = document.querySelector(`[data-file-index="${oldestIndex}"]`);
+                if (gridItem) {
+                    const viewerContainer = gridItem.querySelector('.grid-item-viewer');
+                    const expandButton = gridItem.querySelector('.grid-expand-button');
+                    
+                    // Remove expand button
+                    if (expandButton) {
+                        expandButton.remove();
+                    }
+                    
+                    // Remove active class
+                    gridItem.classList.remove('active');
+                    
+                    // Restore preview image
+                    if (gridPreviewImages[oldestIndex]) {
+                        updateGridItemWithPreview(oldestIndex, gridPreviewImages[oldestIndex]);
+                    } else {
+                        viewerContainer.innerHTML = `
+                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">
+                                Click to activate 3D viewer
+                            </div>
+                        `;
+                    }
+                }
+                
+                return oldestIndex;
+                
+            } catch (error) {
+                console.error(`Error closing oldest viewer ${oldestIndex}:`, error);
+                return null;
+            }
+        }
+        
+        // Close all active grid viewers and revert to preview images
+        async function closeAllActiveViewers() {
+            console.log(`Closing all ${activeGridViewers.size} active viewers...`);
+            
+            // Create a copy of the set to iterate over since we'll be modifying it
+            const activeViewersCopy = new Set(activeGridViewers);
+            
+            for (const viewerIndex of activeViewersCopy) {
+                try {
+                    // Dispose the viewer
+                    if (gridViewers[viewerIndex] && gridViewers[viewerIndex].plugin) {
+                        await gridViewers[viewerIndex].plugin.clear();
+                        gridViewers[viewerIndex].plugin.dispose();
+                    }
+                    gridViewers[viewerIndex] = null;
+                    
+                    // Remove from active set and order
+                    activeGridViewers.delete(viewerIndex);
+                    removeFromViewerOrder(viewerIndex);
+                    
+                    console.log(`Closed viewer ${viewerIndex}`);
+                    
+                } catch (error) {
+                    console.error(`Error closing viewer ${viewerIndex}:`, error);
+                }
+            }
+            
+            // Clear the order array completely
+            gridViewerOrder = [];
+            
+            console.log(`All viewers closed. Active count: ${activeGridViewers.size}`);
+        }
+        
+        // Generate preview image for a file
+        async function generatePreviewImage(file, index) {
+            const { viewer: offscreenViewer, container: offscreenDiv } = await createOffscreenViewer();
+            
+            try {
+                // Load structure
+                await loadStructureIntoGridViewer(offscreenViewer, file);
+                
+                // Wait for rendering
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Get canvas and convert to image
+                const canvas = offscreenDiv.querySelector('canvas');
+                if (canvas) {
+                    const imageUrl = canvas.toDataURL('image/png');
+                    gridPreviewImages[index] = imageUrl;
+                    
+                    // Update the grid item with the preview image if it's currently visible
+                    updateGridItemWithPreview(index, imageUrl);
+                    
+                    // Update the grid item class if it's visible
+                    const gridItem = document.querySelector(`[data-file-index="${index}"]`);
+                    if (gridItem) {
+                        gridItem.classList.remove('loading');
+                    }
+                } else {
+                    gridPreviewImages[index] = null;
+                }
+                
+            } catch (error) {
+                console.error(`Error generating preview for file ${index}:`, error);
+                gridPreviewImages[index] = null;
+                
+                // Update the grid item to show error state if it's currently visible
+                updateGridItemWithPreview(index, null);
+                const gridItem = document.querySelector(`[data-file-index="${index}"]`);
+                if (gridItem) {
+                    gridItem.classList.remove('loading');
+                }
+            } finally {
+                // Clean up offscreen viewer
+                try {
+                    await offscreenViewer.plugin.clear();
+                    offscreenViewer.plugin.dispose();
+                } catch (error) {
+                    console.error('Error disposing offscreen viewer:', error);
+                }
+                document.body.removeChild(offscreenDiv);
+            }
+        }
+        
+        // Update grid item with preview image
+        function updateGridItemWithPreview(index, imageUrl) {
+            const gridItem = document.querySelector(`[data-file-index="${index}"]`);
+            if (!gridItem) {
+                // Item might not be visible in current page, just update the data
+                return;
+            }
+            
+            gridItem.classList.remove('loading');
+            
+            // Find or create viewer container
+            let viewerContainer = gridItem.querySelector('.grid-item-viewer');
+            if (!viewerContainer) {
+                viewerContainer = document.createElement('div');
+                viewerContainer.className = 'grid-item-viewer';
+                gridItem.appendChild(viewerContainer);
+            }
+            
+            if (imageUrl) {
+                // Add preview image
+                viewerContainer.innerHTML = `
+                    <img src="${imageUrl}" alt="Structure preview" class="grid-preview-image" />
+                    <div class="grid-activation-overlay">Click to activate 3D viewer</div>
+                `;
+            } else {
+                // Show error state
+                viewerContainer.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">
+                        Preview failed - Click to load
+                    </div>
+                `;
+            }
+        }
+        
+        // Grid view functions
+        async function createGridView() {
+            const gridContent = document.getElementById('grid-content');
+            gridContent.innerHTML = '';
+            
+            // Preserve existing arrays if they exist, otherwise initialize
+            if (gridViewers.length === 0) {
+                gridViewers = [];
+                activeGridViewers.clear();
+            }
+            if (gridPreviewImages.length === 0) {
+                gridPreviewImages = [];
+            }
+            
+            if (loadedFiles.length === 0) {
+                gridContent.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;">No structures loaded. Load some files to see them in grid view.</div>';
+                return;
+            }
+            
+            // Extend arrays if we have new files
+            while (gridViewers.length < loadedFiles.length) {
+                gridViewers.push(null);
+            }
+            while (gridPreviewImages.length < loadedFiles.length) {
+                gridPreviewImages.push(null);
+            }
+            
+            // Create grid items
+            for (let i = 0; i < loadedFiles.length; i++) {
+                const file = loadedFiles[i];
+                const gridItem = document.createElement('div');
+                gridItem.className = activeGridViewers.has(i) ? 'grid-item active' : 
+                                   gridPreviewImages[i] ? 'grid-item' : 'grid-item loading';
+                gridItem.dataset.fileIndex = i;
+                
+                // Add header with file name
+                const header = document.createElement('div');
+                header.className = 'grid-item-header';
+                header.innerHTML = `
+                    <span>${file.name}</span>
+                    <span class="format-badge ${file.format}" style="float: right;">${file.format.toUpperCase()}</span>
+                `;
+                gridItem.appendChild(header);
+                
+                // Add viewer container
+                const viewerContainer = document.createElement('div');
+                viewerContainer.className = 'grid-item-viewer';
+                gridItem.appendChild(viewerContainer);
+                
+                // Add click handler for activation
+                gridItem.addEventListener('click', (e) => handleGridItemClick(i, e));
+                
+                gridContent.appendChild(gridItem);
+                
+                // If already activated, recreate the 3D viewer
+                if (activeGridViewers.has(i)) {
+                    const viewerId = `grid-viewer-${i}`;
+                    viewerContainer.innerHTML = `<div id="${viewerId}" style="width: 100%; height: 100%;"></div>`;
+                    
+                    // Add expand button
+                    const expandButton = document.createElement('div');
+                    expandButton.className = 'grid-expand-button';
+                    expandButton.innerHTML = '⛶';
+                    expandButton.title = 'Expand to single view';
+                    expandButton.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        expandToSingleView(i);
+                    });
+                    gridItem.appendChild(expandButton);
+                    
+                    // Ensure this viewer is in the order tracking
+                    if (!gridViewerOrder.includes(i)) {
+                        addToViewerOrder(i);
+                    }
+                    
+                    // Recreate the viewer asynchronously
+                    setTimeout(async () => {
+                        try {
+                            const gridViewer = await molstar.Viewer.create(viewerId, {
+                                layoutIsExpanded: false,
+                                layoutShowControls: false,
+                                layoutShowLeftPanel: false,
+                                layoutShowSequence: false,
+                                layoutShowLog: false,
+                                viewportShowExpand: false,
+                                viewportShowSelectionMode: false,
+                                viewportShowAnimation: false
+                            });
+                            
+                            gridViewers[i] = gridViewer;
+                            await loadStructureIntoGridViewer(gridViewer, file);
+                        } catch (error) {
+                            console.error(`Error recreating grid viewer ${i}:`, error);
+                        }
+                    }, 100);
+                    
+                } else if (gridPreviewImages[i]) {
+                    // Show cached preview image
+                    updateGridItemWithPreview(i, gridPreviewImages[i]);
+                } else {
+                    // Generate preview image if not cached
+                    setTimeout(() => {
+                        generatePreviewImage(file, i).catch(error => {
+                            console.error(`Failed to generate preview for ${file.name}:`, error);
+                            gridPreviewImages[i] = null;
+                            updateGridItemWithPreview(i, null);
+                        });
+                    }, i * 500);
+                }
+            }
+            
+            // Highlight current file
+            updateGridSelection();
+        }
+        
+        async function loadStructureIntoGridViewer(gridViewer, file) {
+            if (!gridViewer) {
+                console.warn('Grid viewer is null, skipping structure loading');
+                return;
+            }
+            
+            try {
+                // Clear any existing structures first
+                await gridViewer.plugin.clear();
+                
+                // Verify file data exists and is valid
+                if (!file.data || typeof file.data !== 'string' || file.data.trim().length === 0) {
+                    throw new Error('Invalid or empty file data');
+                }
+                
+                // Create blob with proper MIME type
+                const mimeType = file.format === 'mmcif' ? 'chemical/x-mmcif' : 'chemical/x-pdb';
+                const blob = new Blob([file.data], { type: mimeType });
+                const blobUrl = URL.createObjectURL(blob);
+                
+                try {
+                    // Use the plugin's data loading mechanism directly
+                    const plugin = gridViewer.plugin;
+                    
+                    // Load data
+                    const data = await plugin.builders.data.download({
+                        url: blobUrl,
+                        isBinary: false
+                    });
+                    
+                    // Parse trajectory 
+                    const formatMapping = {
+                        'mmcif': 'mmcif',
+                        'pdb': 'pdb'
+                    };
+                    
+                    const molstarFormat = formatMapping[file.format] || 'pdb';
+                    const trajectory = await plugin.builders.structure.parseTrajectory(data, molstarFormat);
+                    
+                    // Apply default preset
+                    await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
+                    
+                    // Apply current color theme after structure is loaded
+                    await applyColorThemeToViewer(gridViewer);
+                    
+                } finally {
+                    // Clean up blob URL
+                    URL.revokeObjectURL(blobUrl);
+                }
+                
+            } catch (error) {
+                console.error('Error loading structure into grid viewer:', error);
+                throw error; // Re-throw to handle in calling function
+            }
+        }
+        
+        async function applyColorThemeToViewer(targetViewer) {
+            if (!targetViewer) {
+                console.warn('Target viewer is null, skipping color theme application');
+                return;
+            }
+            
+            try {
+                const plugin = targetViewer.plugin;
+                const structures = plugin.managers.structure.hierarchy.current.structures;
+                
+                for (const structure of structures) {
+                    for (const component of structure.components) {
+                        if (component.representations) {
+                            for (const repr of component.representations) {
+                                const update = plugin.build().to(repr.cell).update({
+                                    ...repr.cell.transform.params,
+                                    colorTheme: { name: getColorThemeName(), params: getColorThemeParams() }
+                                });
+                                await update.commit();
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error applying color theme to viewer:', error);
+            }
+        }
+        
+        async function handleGridItemClick(fileIndex, event) {
+            // Check if target is the expand button (don't handle grid item click)
+            if (event.target.classList.contains('grid-expand-button')) {
+                return;
+            }
+            
+            // If already activated, update LRU order and do nothing else
+            if (activeGridViewers.has(fileIndex)) {
+                addToViewerOrder(fileIndex); // Move to most recent
+                return;
+            }
+            
+            // First click - activate 3D viewer
+            try {
+                const gridItem = document.querySelector(`[data-file-index="${fileIndex}"]`);
+                if (!gridItem) return;
+                
+                const viewerContainer = gridItem.querySelector('.grid-item-viewer');
+                if (!viewerContainer) return;
+                
+                // Show loading state
+                viewerContainer.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">
+                        <div style="text-align: center;">
+                            <div style="margin-bottom: 10px;">Loading 3D viewer...</div>
+                            <div style="width: 20px; height: 20px; border: 2px solid #ddd; border-top: 2px solid #666; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                        </div>
+                    </div>
+                `;
+                
+                // Check WebGL context limit and auto-close oldest if needed
+                if (activeGridViewers.size >= 16) {
+                    console.log(`WebGL limit reached (${activeGridViewers.size}/16), closing oldest viewer...`);
+                    const closedIndex = await closeOldestViewer();
+                    if (closedIndex !== null) {
+                        console.log(`Successfully closed viewer ${closedIndex}, proceeding with new activation`);
+                    } else {
+                        console.error('Failed to close oldest viewer');
+                        viewerContainer.innerHTML = `
+                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666; text-align: center; padding: 20px;">
+                                WebGL context limit reached and unable to free space. Please try again.
+                            </div>
+                        `;
+                        return;
+                    }
+                }
+                
+                // Create unique ID for this viewer
+                const viewerId = `grid-viewer-${fileIndex}`;
+                viewerContainer.innerHTML = `<div id="${viewerId}" style="width: 100%; height: 100%;"></div>`;
+                
+                // Create the Molstar viewer
+                const gridViewer = await molstar.Viewer.create(viewerId, {
+                    layoutIsExpanded: false,
+                    layoutShowControls: false,
+                    layoutShowLeftPanel: false,
+                    layoutShowSequence: false,
+                    layoutShowLog: false,
+                    viewportShowExpand: false,
+                    viewportShowSelectionMode: false,
+                    viewportShowAnimation: false
+                });
+                
+                // Store the viewer and add to tracking
+                gridViewers[fileIndex] = gridViewer;
+                activeGridViewers.add(fileIndex);
+                addToViewerOrder(fileIndex); // Add as most recent
+                
+                // Load structure into the viewer
+                await loadStructureIntoGridViewer(gridViewer, loadedFiles[fileIndex]);
+                
+                // Add the expand button
+                const expandButton = document.createElement('div');
+                expandButton.className = 'grid-expand-button';
+                expandButton.innerHTML = '⛶';
+                expandButton.title = 'Expand to single view';
+                expandButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    expandToSingleView(fileIndex);
+                });
+                gridItem.appendChild(expandButton);
+                
+                // Mark as active
+                gridItem.classList.add('active');
+                
+                console.log(`Activated viewer ${fileIndex}. Active viewers: ${activeGridViewers.size}/16`);
+                
+            } catch (error) {
+                console.error(`Error activating grid viewer ${fileIndex}:`, error);
+                
+                // Remove from active viewers if it was added but failed
+                activeGridViewers.delete(fileIndex);
+                removeFromViewerOrder(fileIndex);
+                if (gridViewers[fileIndex]) {
+                    try {
+                        gridViewers[fileIndex].plugin.dispose();
+                    } catch (disposeError) {
+                        console.error('Error disposing failed viewer:', disposeError);
+                    }
+                    gridViewers[fileIndex] = null;
+                }
+                
+                // Show error state
+                const gridItem = document.querySelector(`[data-file-index="${fileIndex}"]`);
+                if (gridItem) {
+                    const viewerContainer = gridItem.querySelector('.grid-item-viewer');
+                    if (viewerContainer) {
+                        viewerContainer.innerHTML = `
+                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">
+                                Failed to load 3D viewer - Click to retry
+                            </div>
+                        `;
+                    }
+                }
+            }
+        }
+        
+        // Function to expand a grid item to single view
+        function expandToSingleView(fileIndex) {
+            currentFileIndex = fileIndex;
+            expandedGridItem = fileIndex;
+            setLayoutMode('single');
+        }
+        
+        function updateGridSelection() {
+            const gridItems = document.querySelectorAll('.grid-item');
+            gridItems.forEach((item, index) => {
+                if (index === currentFileIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        async function exitGridView() {
+            console.log('Exiting grid view, currentFileIndex:', currentFileIndex);
+            
+            // FIRST: Close some grid viewers to make room for main viewer
+            console.log(`Active grid viewers before single view: ${activeGridViewers.size}`);
+            if (activeGridViewers.size > 12) {
+                // Close oldest viewers to make room for main viewer
+                const viewersToClose = activeGridViewers.size - 12;
+                console.log(`Closing ${viewersToClose} grid viewers to make room for main viewer`);
+                
+                for (let i = 0; i < viewersToClose; i++) {
+                    await closeOldestViewer();
+                }
+            }
+            
+            // Clear grid content visually
+            const gridContent = document.getElementById('grid-content');
+            gridContent.innerHTML = '';
+            
+            // Ensure main viewer container is visible and ready
+            const viewerContainer = document.getElementById('viewer-container');
+            if (viewerContainer) {
+                viewerContainer.style.display = 'block';
+                viewerContainer.style.visibility = 'visible';
+                viewerContainer.style.opacity = '1';
+                
+                // Force a reflow
+                viewerContainer.offsetHeight;
+                
+                console.log('Viewer container made visible');
+            }
+            
+            // ALWAYS reinitialize main viewer to ensure fresh WebGL context
+            try {
+                // Dispose existing viewer if it exists
+                if (viewer && viewer.plugin) {
+                    console.log('Disposing existing main viewer');
+                    await viewer.plugin.clear();
+                    viewer.plugin.dispose();
+                }
+                
+                // Clear any existing content in viewer container
+                if (viewerContainer) {
+                    viewerContainer.innerHTML = '';
+                }
+                
+                console.log('Creating fresh main viewer');
+                viewer = await molstar.Viewer.create('viewer-container', {
+                    layoutIsExpanded: false,
+                    layoutShowControls: false,
+                    layoutShowLeftPanel: false,
+                    layoutShowSequence: false,
+                    layoutShowLog: false,
+                    viewportShowExpand: false,
+                    viewportShowSelectionMode: false,
+                    viewportShowAnimation: false
+                });
+                console.log('Main viewer (re)initialized successfully');
+                
+                // Ensure canvas is visible
+                setTimeout(() => {
+                    const newCanvas = viewerContainer.querySelector('canvas');
+                    if (newCanvas) {
+                        newCanvas.style.display = 'block';
+                        newCanvas.style.visibility = 'visible';
+                        console.log('New canvas made visible');
+                    }
+                }, 100);
+                
+            } catch (error) {
+                console.error('Failed to reinitialize main viewer:', error);
+                alert('Failed to reinitialize viewer. Please refresh the page.');
+                return;
+            }
+            
+            // Load structure in main viewer
+            if (loadedFiles.length > 0) {
+                // If no specific file selected, use the first file
+                const fileIndex = currentFileIndex !== -1 ? currentFileIndex : 0;
+                const file = loadedFiles[fileIndex];
+                
+                if (file && file.data) {
+                    console.log('Loading file in single view:', file.name);
+                    try {
+                        // Update currentFileIndex if it was -1
+                        if (currentFileIndex === -1) {
+                            currentFileIndex = fileIndex;
+                        }
+                        
+                        await parseStructureFile(file.data, file.format, false);
+                        
+                        // Force viewer refresh and resize
+                        setTimeout(() => {
+                            if (viewer && viewer.plugin) {
+                                try {
+                                    // Check if canvas exists
+                                    const canvas = viewerContainer.querySelector('canvas');
+                                    console.log('Canvas found:', !!canvas);
+                                    
+                                    if (canvas) {
+                                        canvas.style.display = 'block';
+                                        canvas.style.visibility = 'visible';
+                                    }
+                                    
+                                    // Trigger window resize event to ensure proper rendering
+                                    window.dispatchEvent(new Event('resize'));
+                                    
+                                    viewer.handleResize();
+                                    viewer.plugin.managers.camera.reset();
+                                    
+                                    console.log('Viewer refreshed and camera reset');
+                                } catch (refreshError) {
+                                    console.error('Error refreshing viewer:', refreshError);
+                                }
+                            }
+                        }, 200);
+                        
+                        updateFileHistory();
+                    } catch (error) {
+                        console.error('Error loading structure in single view:', error);
+                        // Show error in viewer
+                        if (viewer) {
+                            document.getElementById('atom-count').textContent = 'Error';
+                        }
+                    }
+                } else {
+                    console.warn('No valid file data found for single view');
+                }
+            } else {
+                console.log('No files loaded');
+                // Clear the main viewer if no files
+                if (viewer) {
+                    await viewer.plugin.clear();
+                    document.getElementById('atom-count').textContent = '0';
+                }
+            }
+        }
+        
+        // Old parsing functions removed - replaced by Molstar implementation above
+
+        // Atom size/opacity functions removed - using cartoon mode only
+
+
+
+        // Update file history UI
+        function updateFileHistory() {
+            const historyContainer = document.getElementById('file-history');
+            // Preserve scroll position if possible
+            const currentScrollTop = historyContainer.scrollTop;
+            historyContainer.innerHTML = ''; // Clear existing items
+
+            if (loadedFiles.length === 0) {
+                historyContainer.textContent = 'No files loaded.';
+                return;
+            }
+
+            let activeItem = null; // Keep track of the active item element
+
+            loadedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                if (index === currentFileIndex) {
+                    fileItem.classList.add('active');
+                    activeItem = fileItem; // Store the active item
+                }
+                
+                // Create file name element
+                const fileName = document.createElement('span');
+                fileName.textContent = file.name;
+                fileItem.appendChild(fileName);
+                
+                // Add format badge
+                const formatBadge = document.createElement('span');
+                formatBadge.className = `format-badge ${file.format}`;
+                formatBadge.textContent = file.format.toUpperCase();
+                fileItem.appendChild(formatBadge);
+                
+                fileItem.title = file.name;
+
+                fileItem.addEventListener('click', async () => {
+                    if (currentFileIndex === index) return;
+
+                    currentFileIndex = index;
+                    
+                    // Check if we're in dual session mode and need to update it
+                    if (currentSessionMode === 'dual' && sequenceAlignmentEnabled) {
+                        // Find if current file has a corresponding sequence to maintain dual session
+                        const matchingSequence = parsedSequences.find(seq => {
+                            const match = findMatchingStructure(seq.header);
+                            return match && match.name === file.name;
+                        });
+                        
+                        if (matchingSequence && matchingSequence.status === 'completed') {
+                            // Update dual session with new file and its predicted structure
+                            await loadDualSessionStructures(matchingSequence, file);
+                        } else {
+                            // No matching sequence, fall back to single mode
+                            await initializeSingleSessionMode();
+                            parseStructureFile(file.data, file.format, false);
+                        }
+                    } else {
+                        // Normal single session mode
+                        parseStructureFile(file.data, file.format, false); // Don't maintain view
+                    }
+                    
+                    updateFileHistory(); // Update highlighting
+
+                    const diffusionIndex = diffusionSteps.findIndex(step => step.name === file.name);
+                    if (diffusionIndex !== -1) {
+                        currentStepIndex = diffusionIndex;
+                        initializeAnimationControls();
+                        document.getElementById('animation-controls').style.display = 'block';
+                    } else {
+                        document.getElementById('animation-controls').style.display = 'none';
+                        stopAnimation();
+                    }
+                });
+                historyContainer.appendChild(fileItem);
+            });
+
+            // Restore scroll position or scroll active item into view
+            if (activeItem) {
+                 // Check if active item is visible, if not, scroll to it
+                const containerRect = historyContainer.getBoundingClientRect();
+                const itemRect = activeItem.getBoundingClientRect();
+                if (itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom) {
+                    activeItem.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+                } else {
+                    // If it was already visible, try restoring previous scroll position
+                     historyContainer.scrollTop = currentScrollTop;
+                }
+            } else {
+                 // Fallback if no active item somehow
+                 historyContainer.scrollTop = currentScrollTop;
+            }
+        }
+
+
+        // Handle Key Down for Navigation (update needed for sorted list)
+         function handleKeyDown(event) {
+             if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'BUTTON')) return;
+             if (loadedFiles.length === 0) return;
+
+             let newIndex = currentFileIndex;
+             let indexChanged = false;
+
+             if (event.key === 'ArrowUp') {
+                 event.preventDefault();
+                 if (currentFileIndex > 0) { newIndex = currentFileIndex - 1; indexChanged = true; }
+                 // Optional: Wrap around to bottom
+                 // else if (currentFileIndex === 0) { newIndex = loadedFiles.length - 1; indexChanged = true; }
+             } else if (event.key === 'ArrowDown') {
+                 event.preventDefault();
+                 if (currentFileIndex < loadedFiles.length - 1) { newIndex = currentFileIndex + 1; indexChanged = true; }
+                 // Optional: Wrap around to top
+                 // else if (currentFileIndex === loadedFiles.length - 1) { newIndex = 0; indexChanged = true; }
+             }
+
+             if (indexChanged) {
+                 currentFileIndex = newIndex; // newIndex is now the correct index in the *sorted* list
+                 const selectedFile = loadedFiles[currentFileIndex];
+                 
+                 // Handle dual session mode for keyboard navigation too
+                 (async () => {
+                     if (currentSessionMode === 'dual' && sequenceAlignmentEnabled) {
+                         // Find if current file has a corresponding sequence to maintain dual session
+                         const matchingSequence = parsedSequences.find(seq => {
+                             const match = findMatchingStructure(seq.header);
+                             return match && match.name === selectedFile.name;
+                         });
+                         
+                         if (matchingSequence && matchingSequence.status === 'completed') {
+                             // Update dual session with new file and its predicted structure
+                             await loadDualSessionStructures(matchingSequence, selectedFile);
+                         } else {
+                             // No matching sequence, fall back to single mode
+                             await initializeSingleSessionMode();
+                             parseStructureFile(selectedFile.data, selectedFile.format, false);
+                         }
+                     } else {
+                         // Normal single session mode
+                         parseStructureFile(selectedFile.data, selectedFile.format, false); // Don't maintain view
+                     }
+                 })();
+                 
+                 updateFileHistory(); // Update highlighting and scroll
+
+                 const diffusionIndex = diffusionSteps.findIndex(step => step.name === selectedFile.name);
+                 if (diffusionIndex !== -1) {
+                     currentStepIndex = diffusionIndex; // Index within diffusionSteps array
+                     initializeAnimationControls();
+                     document.getElementById('animation-controls').style.display = 'block';
+                 } else {
+                     document.getElementById('animation-controls').style.display = 'none';
+                     stopAnimation();
+                 }
+             }
+         }
+
+
+        // ===== SEQUENCE ALIGNMENT FUNCTIONS =====
+        
+        // Toggle sequence alignment section
+        function toggleSequenceAlignment() {
+            const toggle = document.getElementById('seq-alignment-toggle');
+            const content = document.getElementById('seq-alignment-content');
+            
+            sequenceAlignmentEnabled = toggle.checked;
+            
+            if (sequenceAlignmentEnabled) {
+                content.classList.add('active');
+                
+                // Auto-enable seq structure only mode if no structures are loaded
+                if (loadedFiles.length === 0) {
+                    document.getElementById('seq-only-radio').checked = true;
+                    currentDisplayMode = 'seq-only';
+                }
+                
+                updateViewerConfigForAlignment();
+            } else {
+                content.classList.remove('active');
+                resetViewerConfig();
+            }
+        }
+        
+        // Set input mode (FASTA or single sequence)
+        function setInputMode(mode) {
+            currentInputMode = mode;
+            
+            const fastaBtn = document.getElementById('fasta-mode');
+            const singleBtn = document.getElementById('single-mode');
+            const fastaSection = document.getElementById('fasta-input-section');
+            const singleSection = document.getElementById('single-input-section');
+            
+            if (mode === 'fasta') {
+                fastaBtn.classList.add('active');
+                singleBtn.classList.remove('active');
+                fastaSection.style.display = 'block';
+                singleSection.style.display = 'none';
+            } else {
+                fastaBtn.classList.remove('active');
+                singleBtn.classList.add('active');
+                fastaSection.style.display = 'none';
+                singleSection.style.display = 'block';
+            }
+        }
+        
+        // Handle FASTA file upload
+        function handleFastaFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('fasta-textarea').value = e.target.result;
+                    parseFastaInput();
+                };
+                reader.readAsText(file);
+            }
+        }
+        
+        // Parse FASTA input
+        function parseFastaInput() {
+            const fastaText = document.getElementById('fasta-textarea').value.trim();
+            if (!fastaText) {
+                alert('Please provide FASTA sequences');
+                return;
+            }
+
+            try {
+                const newSequences = parseFasta(fastaText);
+                if (newSequences.length === 0) {
+                    alert('No valid FASTA sequences found');
+                    return;
+                }
+
+                parsedSequences = [...parsedSequences, ...newSequences];
+                updateSequenceList();
+                showParsedSequencesSection();
+                console.log(`Successfully parsed ${newSequences.length} sequences`);
+                
+            } catch (error) {
+                alert('Error parsing FASTA: ' + error.message);
+            }
+        }
+        
+        // Parse FASTA text into sequence objects
+        function parseFasta(fastaText) {
+            const lines = fastaText.split('\n').map(line => line.trim()).filter(line => line);
+            const sequences = [];
+            let currentSeq = null;
+
+            for (const line of lines) {
+                if (line.startsWith('>')) {
+                    if (currentSeq) {
+                        sequences.push(currentSeq);
+                    }
+                    currentSeq = {
+                        header: line.substring(1),
+                        sequence: '',
+                        status: 'pending',
+                        pdbData: null,
+                        error: null,
+                        matchedStructure: null,
+                        rmsdScore: null
+                    };
+                } else if (currentSeq) {
+                    currentSeq.sequence += line.replace(/[^A-Za-z]/g, '').toUpperCase();
+                }
+            }
+
+            if (currentSeq) {
+                sequences.push(currentSeq);
+            }
+
+            // Validate sequences
+            return sequences.filter(seq => {
+                if (seq.sequence.length < 10) {
+                    console.warn(`Skipping sequence ${seq.header}: too short (${seq.sequence.length} residues)`);
+                    return false;
+                }
+                if (seq.sequence.length > 1000) {
+                    console.warn(`Skipping sequence ${seq.header}: too long (${seq.sequence.length} residues)`);
+                    return false;
+                }
+                return true;
+            });
+        }
+        
+        // Add single sequence
+        function addSingleSequence() {
+            const name = document.getElementById('sequence-name').value.trim();
+            const sequence = document.getElementById('single-sequence-textarea').value.trim().replace(/[^A-Za-z]/g, '').toUpperCase();
+            
+            if (!name || !sequence) {
+                alert('Please provide both sequence name and sequence');
+                return;
+            }
+            
+            if (sequence.length < 10) {
+                alert('Sequence too short (minimum 10 residues)');
+                return;
+            }
+            
+            if (sequence.length > 1000) {
+                alert('Sequence too long (maximum 1000 residues)');
+                return;
+            }
+            
+            const newSequence = {
+                header: name,
+                sequence: sequence,
+                status: 'pending',
+                pdbData: null,
+                error: null,
+                matchedStructure: null,
+                rmsdScore: null
+            };
+            
+            parsedSequences.push(newSequence);
+            updateSequenceList();
+            showParsedSequencesSection();
+            
+            // Clear inputs
+            document.getElementById('sequence-name').value = '';
+            document.getElementById('single-sequence-textarea').value = '';
+        }
+        
+        // Update sequence list UI
+        function updateSequenceList() {
+            const listContainer = document.getElementById('sequence-list');
+            const countElement = document.getElementById('sequence-count');
+            
+            countElement.textContent = parsedSequences.length;
+
+            if (parsedSequences.length === 0) {
+                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: hsl(220, 9%, 46%);">No sequences parsed yet</div>';
+                return;
+            }
+
+            listContainer.innerHTML = parsedSequences.map((seq, index) => `
+                <div class="sequence-item ${seq.status} ${selectedSequenceIndex === index ? 'active' : ''}" onclick="selectSequence(${index})">
+                    <div class="sequence-name">
+                        ${seq.header}
+                        ${seq.rmsdScore ? `<span class="rmsd-score">RMSD: ${seq.rmsdScore.toFixed(3)}Å</span>` : ''}
+                        ${seq.status === 'completed' ? `<button onclick="event.stopPropagation(); downloadSequencePDB(${index})" style="float: right; padding: 2px 6px; font-size: 10px; margin-left: 5px;">Download PDB</button>` : ''}
+                    </div>
+                    <div class="sequence-preview">${seq.sequence.substring(0, 40)}${seq.sequence.length > 40 ? '...' : ''}</div>
+                    <div class="sequence-status">
+                        ${getSequenceStatusText(seq)} (${seq.sequence.length} residues)
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Get status text for sequence
+        function getSequenceStatusText(seq) {
+            switch (seq.status) {
+                case 'pending': return 'Ready to fold';
+                case 'loading': return 'Folding with ESMFold...';
+                case 'completed': return 'Structure ready';
+                case 'error': return `Error: ${seq.error}`;
+                default: return 'Unknown status';
+            }
+        }
+        
+        // Show parsed sequences section
+        function showParsedSequencesSection() {
+            document.getElementById('parsed-sequences-section').style.display = 'block';
+            document.getElementById('align-mode-section').style.display = 'block';
+        }
+        
+        // Select sequence
+        function selectSequence(index) {
+            selectedSequenceIndex = index;
+            updateSequenceList();
+            
+            const seq = parsedSequences[index];
+            if (seq.status === 'completed' && seq.pdbData) {
+                displaySequenceStructure(seq);
+            } else if (seq.status === 'pending') {
+                foldSequence(index);
+            }
+        }
+        
+        // Fold all sequences
+        async function foldAllSequences() {
+            const pendingSequences = parsedSequences.filter(seq => seq.status === 'pending');
+            if (pendingSequences.length === 0) {
+                alert('No pending sequences to fold');
+                return;
+            }
+
+            for (let i = 0; i < parsedSequences.length; i++) {
+                if (parsedSequences[i].status === 'pending') {
+                    await foldSequence(i);
+                    // Add a small delay to avoid overwhelming the API
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+        }
+        
+        // Fold single sequence using ESMFold API
+        async function foldSequence(index) {
+            const seq = parsedSequences[index];
+            seq.status = 'loading';
+            updateSequenceList();
+
+            try {
+                console.log(`Folding sequence: ${seq.header}`);
+                
+                const response = await fetch('https://api.esmatlas.com/foldSequence/v1/pdb/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: seq.sequence
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+                }
+
+                const pdbData = await response.text();
+                
+                if (!pdbData || !pdbData.includes('ATOM')) {
+                    throw new Error('Invalid PDB data received from API');
+                }
+
+                seq.pdbData = pdbData;
+                seq.status = 'completed';
+                
+                // Add predicted structure to loadedFiles for download functionality
+                const predictedFileName = `${seq.header}_predicted.pdb`;
+                const existingIndex = loadedFiles.findIndex(f => f.name === predictedFileName);
+                
+                if (existingIndex !== -1) {
+                    // Update existing predicted structure
+                    loadedFiles[existingIndex] = {
+                        name: predictedFileName,
+                        data: pdbData,
+                        format: 'pdb',
+                        isPredicted: true
+                    };
+                } else {
+                    // Add new predicted structure
+                    loadedFiles.push({
+                        name: predictedFileName,
+                        data: pdbData,
+                        format: 'pdb',
+                        isPredicted: true
+                    });
+                }
+                
+                // Try to match with existing structures
+                seq.matchedStructure = findMatchingStructure(seq.header);
+                
+                if (selectedSequenceIndex === index) {
+                    await displaySequenceStructure(seq);
+                }
+
+                console.log(`Successfully folded ${seq.header}`);
+
+            } catch (error) {
+                console.error('Error folding sequence:', error);
+                seq.status = 'error';
+                seq.error = error.message;
+            } finally {
+                updateSequenceList();
+            }
+        }
+        
+        // Find matching structure based on sequence name
+        function findMatchingStructure(sequenceName) {
+            if (!sequenceName || loadedFiles.length === 0) return null;
+            
+            // Phase 1: Strict name matching (ignore only file extension)
+            // If sequence name is "sample_0", look for exactly "sample_0.pdb" or "sample_0.cif"
+            let match = loadedFiles.find(file => {
+                // Remove file extension from filename
+                const fileNameWithoutExt = file.name.replace(/\.(pdb|cif|mmcif)$/i, '');
+                // Case insensitive exact comparison
+                return fileNameWithoutExt.toLowerCase() === sequenceName.toLowerCase();
+            });
+            
+            if (match) {
+                console.log(`Strict match found: ${match.name} for sequence ${sequenceName}`);
+                return match;
+            }
+            
+            // Phase 2: Partial matching (fallback) - only if strict matching fails
+            console.log(`No strict match found for ${sequenceName}, trying partial matching...`);
+            
+            // Normalize sequence name for partial matching
+            const normalizedSeqName = sequenceName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            match = loadedFiles.find(file => {
+                const normalizedFileName = file.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                
+                // Check if filename contains sequence name or vice versa
+                if (normalizedFileName.includes(normalizedSeqName) || normalizedSeqName.includes(normalizedFileName)) {
+                    return true;
+                }
+                
+                // Try extracting PDB ID patterns (4 characters) from both
+                const seqPdbId = normalizedSeqName.match(/[a-z0-9]{4}/);
+                const filePdbId = normalizedFileName.match(/[a-z0-9]{4}/);
+                
+                if (seqPdbId && filePdbId && seqPdbId[0] === filePdbId[0]) {
+                    return true;
+                }
+                
+                // Try matching with common separators replaced
+                const seqParts = sequenceName.toLowerCase().split(/[-_\s\.]+/);
+                const fileParts = file.name.toLowerCase().split(/[-_\s\.]+/);
+                
+                for (const seqPart of seqParts) {
+                    for (const filePart of fileParts) {
+                        if (seqPart.length > 2 && filePart.length > 2 && 
+                            (seqPart.includes(filePart) || filePart.includes(seqPart))) {
+                            return true;
+                        }
+                    }
+                }
+                
+                return false;
+            });
+            
+            if (match) {
+                console.log(`Partial match found: ${match.name} for sequence ${sequenceName}`);
+                return match;
+            }
+            
+            console.log(`No matching structure found for sequence: ${sequenceName}`);
+            return null;
+        }
+        
+        // Display sequence structure in viewer
+        async function displaySequenceStructure(seq) {
+            if (!seq.pdbData) return;
+            
+            try {
+                // Update currentFileIndex to point to the predicted structure for download functionality
+                const predictedFileName = `${seq.header}_predicted.pdb`;
+                const predictedFileIndex = loadedFiles.findIndex(f => f.name === predictedFileName);
+                if (predictedFileIndex !== -1) {
+                    currentFileIndex = predictedFileIndex;
+                }
+                
+                // Find matching structure for this sequence
+                const matchedStructure = findMatchingStructure(seq.header);
+                
+                if (currentDisplayMode === 'align' && matchedStructure) {
+                    // Align mode: reinitialize viewer with alignment tools enabled
+                    await initializeAlignmentMode();
+                    await loadStructuresForAlignment(seq, matchedStructure);
+                } else if (currentDisplayMode === 'seq-only') {
+                    // Seq structure only mode: show only predicted structure
+                    await initializeSingleSessionMode();
+                    await loadPredictedStructure(seq.pdbData);
+                } else if (currentDisplayMode === 'dual' && matchedStructure) {
+                    // Dual session mode: show original structure on left, predicted on right
+                    await initializeDualSessionMode();
+                    await loadDualSessionStructures(seq, matchedStructure);
+                } else {
+                    // Fallback to single mode: show only predicted structure
+                    await initializeSingleSessionMode();
+                    await loadPredictedStructure(seq.pdbData);
+                }
+            } catch (error) {
+                console.error('Error displaying sequence structure:', error);
+            }
+        }
+        
+        // Initialize single session mode (normal single viewer)
+        async function initializeSingleSessionMode() {
+            currentSessionMode = 'single';
+            const container = document.getElementById('container');
+            container.className = 'single-view single-session-mode';
+            
+            // Clean up dual session viewers if they exist
+            if (leftViewer && leftViewer.plugin) {
+                await leftViewer.plugin.clear();
+                leftViewer.plugin.dispose();
+                leftViewer = null;
+            }
+            if (rightViewer && rightViewer.plugin) {
+                await rightViewer.plugin.clear();
+                rightViewer.plugin.dispose();
+                rightViewer = null;
+            }
+            
+            // Ensure main viewer exists and is configured normally
+            if (!viewer || !viewer.plugin) {
+                const viewerContainer = document.getElementById('viewer-container');
+                if (viewerContainer) {
+                    viewerContainer.innerHTML = '';
+                }
+                
+                viewer = await molstar.Viewer.create('viewer-container', {
+                    layoutIsExpanded: false,
+                    layoutShowControls: false,
+                    layoutShowLeftPanel: false,
+                    layoutShowSequence: false,
+                    layoutShowLog: false,
+                    viewportShowExpand: false,
+                    viewportShowSelectionMode: false,
+                    viewportShowAnimation: false
+                });
+            }
+        }
+        
+        // Initialize dual session mode (left = original, right = predicted)
+        async function initializeDualSessionMode() {
+            currentSessionMode = 'dual';
+            const container = document.getElementById('container');
+            container.className = 'single-view dual-session-mode';
+            
+            // Clean up existing viewers
+            // Clear main viewer to remove background content
+            if (viewer && viewer.plugin) {
+                await viewer.plugin.clear();
+                // Don't dispose main viewer, just clear it to remove background structures
+            }
+            
+            if (leftViewer && leftViewer.plugin) {
+                await leftViewer.plugin.clear();
+                leftViewer.plugin.dispose();
+                leftViewer = null;
+            }
+            if (rightViewer && rightViewer.plugin) {
+                await rightViewer.plugin.clear();
+                rightViewer.plugin.dispose();
+                rightViewer = null;
+            }
+            
+            // Clear dual viewer containers
+            document.getElementById('left-viewer').innerHTML = '';
+            document.getElementById('right-viewer').innerHTML = '';
+            
+            // Create left viewer for original structure
+            leftViewer = await molstar.Viewer.create('left-viewer', {
+                layoutIsExpanded: false,
+                layoutShowControls: false,
+                layoutShowLeftPanel: false,
+                layoutShowSequence: false,
+                layoutShowLog: false,
+                viewportShowExpand: false,
+                viewportShowSelectionMode: false,
+                viewportShowAnimation: false
+            });
+            
+            // Create right viewer for predicted structure
+            rightViewer = await molstar.Viewer.create('right-viewer', {
+                layoutIsExpanded: false,
+                layoutShowControls: false,
+                layoutShowLeftPanel: false,
+                layoutShowSequence: false,
+                layoutShowLog: false,
+                viewportShowExpand: false,
+                viewportShowSelectionMode: false,
+                viewportShowAnimation: false
+            });
+            
+            console.log('Dual session mode initialized');
+        }
+        
+        // Initialize alignment mode (single viewer with alignment tools)
+        async function initializeAlignmentMode() {
+            currentSessionMode = 'align';
+            const container = document.getElementById('container');
+            container.className = 'single-view single-session-mode';
+            
+            // Clean up existing viewers
+            // Dispose existing main viewer and recreate with alignment tools
+            if (viewer && viewer.plugin) {
+                await viewer.plugin.clear();
+                viewer.plugin.dispose();
+            }
+            
+            // Clean up dual session viewers if they exist
+            if (leftViewer && leftViewer.plugin) {
+                await leftViewer.plugin.clear();
+                leftViewer.plugin.dispose();
+                leftViewer = null;
+            }
+            if (rightViewer && rightViewer.plugin) {
+                await rightViewer.plugin.clear();
+                rightViewer.plugin.dispose();
+                rightViewer = null;
+            }
+            
+            const viewerContainer = document.getElementById('viewer-container');
+            if (viewerContainer) {
+                viewerContainer.innerHTML = '';
+            }
+            
+            // Create viewer with alignment tools enabled
+            viewer = await molstar.Viewer.create('viewer-container', {
+                layoutIsExpanded: false,
+                layoutShowControls: false,
+                layoutShowLeftPanel: false,
+                layoutShowSequence: false,
+                layoutShowLog: true,  // Enable log for RMSD display
+                viewportShowExpand: false,
+                viewportShowSelectionMode: true,  // Enable selection mode for alignment
+                viewportShowAnimation: false
+            });
+            
+            console.log('Alignment mode initialized with log and selection tools enabled');
+        }
+        
+        // Load structures in dual session mode
+        async function loadDualSessionStructures(sequence, matchedStructure) {
+            try {
+                // Update headers
+                document.getElementById('left-viewer-header').textContent = `Original: ${matchedStructure.name}`;
+                document.getElementById('right-viewer-header').textContent = `Predicted: ${sequence.header}`;
+                
+                // Load original structure in left viewer
+                const blob1 = new Blob([matchedStructure.data], { type: 'text/plain' });
+                const url1 = URL.createObjectURL(blob1);
+                const data1 = await leftViewer.plugin.builders.data.download({ url: url1, isBinary: false });
+                const trajectory1 = await leftViewer.plugin.builders.structure.parseTrajectory(data1, matchedStructure.format);
+                const structure1 = await leftViewer.plugin.builders.structure.hierarchy.applyPreset(trajectory1, 'default');
+                URL.revokeObjectURL(url1);
+                
+                // Apply current color theme to original structure
+                await applyColorThemeToViewer(leftViewer);
+                
+                // Load predicted structure in right viewer
+                const blob2 = new Blob([sequence.pdbData], { type: 'text/plain' });
+                const url2 = URL.createObjectURL(blob2);
+                const data2 = await rightViewer.plugin.builders.data.download({ url: url2, isBinary: false });
+                const trajectory2 = await rightViewer.plugin.builders.structure.parseTrajectory(data2, 'pdb');
+                const structure2 = await rightViewer.plugin.builders.structure.hierarchy.applyPreset(trajectory2, 'default');
+                URL.revokeObjectURL(url2);
+                
+                // Apply pLDDT coloring to predicted structure
+                await applyPLDDTColoringToViewer(rightViewer);
+                
+                console.log('Dual session structures loaded successfully');
+                
+            } catch (error) {
+                console.error('Error loading dual session structures:', error);
+            }
+        }
+        
+        // Apply pLDDT coloring to a specific viewer
+        async function applyPLDDTColoringToViewer(targetViewer) {
+            try {
+                const structures = targetViewer.plugin.managers.structure.hierarchy.current.structures;
+                
+                if (!structures || structures.length === 0) {
+                    console.warn('No structures found for pLDDT coloring');
+                    return;
+                }
+
+                const structureData = structures[0].cell.obj?.data;
+                if (structureData) {
+                    try {
+                        const model = structureData.models[0];
+                        
+                        if (model.atomicConformation && model.atomicConformation.B_iso_or_equiv) {
+                            const themeName = 'plddt-confidence-' + Math.random().toString(36).substring(7);
+                            
+                            const PLDDTColorThemeProvider = {
+                                name: themeName,
+                                label: "pLDDT Confidence",
+                                category: "Validation",
+                                factory: (ctx, props) => {
+                                    return {
+                                        granularity: "group",
+                                        color: (location) => {
+                                            if (location.element !== undefined) {
+                                                const model = ctx.structure.models[0];
+                                                if (model && model.atomicConformation && model.atomicConformation.B_iso_or_equiv) {
+                                                    const bFactor = model.atomicConformation.B_iso_or_equiv.value(location.element) - 0.04;
+                                                    
+                                                    if (bFactor > 0.9) {
+                                                        return 0x0053D6; // Dark blue - very high confidence
+                                                    } else if (bFactor > 0.7) {
+                                                        return 0x65CBF3; // Light blue - confident
+                                                    } else if (bFactor > 0.5) {
+                                                        return 0xFFDB13; // Yellow - low confidence
+                                                    } else {
+                                                        return 0xFF7D45; // Orange - very low confidence
+                                                    }
+                                                }
+                                            }
+                                            return 0x777777; // Default gray
+                                        }
+                                    };
+                                },
+                                getParams: () => ({}),
+                                defaultValues: {},
+                                isApplicable: (ctx) => {
+                                    const model = ctx.structure.models[0];
+                                    return !!(model && model.atomicConformation && model.atomicConformation.B_iso_or_equiv);
+                                }
+                            };
+                            
+                            targetViewer.plugin.representation.structure.themes.colorThemeRegistry.add(PLDDTColorThemeProvider);
+                            
+                            await targetViewer.plugin.dataTransaction(async () => {
+                                for (const structure of structures) {
+                                    if (structure.components && structure.components.length > 0) {
+                                        await targetViewer.plugin.managers.structure.component.updateRepresentationsTheme(
+                                            structure.components, 
+                                            { color: themeName }
+                                        );
+                                    }
+                                }
+                            });
+                            
+                            console.log('Successfully applied pLDDT coloring to viewer');
+                            return;
+                        }
+                    } catch (structure_error) {
+                        console.warn('Error creating custom pLDDT theme:', structure_error);
+                    }
+                }
+                
+                // Fallback to built-in themes
+                const themeOptions = ['plddt-confidence', 'uncertainty', 'atom-test'];
+                
+                for (const themeName of themeOptions) {
+                    try {
+                        await targetViewer.plugin.dataTransaction(async () => {
+                            for (const structure of structures) {
+                                if (structure.components && structure.components.length > 0) {
+                                    await targetViewer.plugin.managers.structure.component.updateRepresentationsTheme(
+                                        structure.components, 
+                                        { color: themeName }
+                                    );
+                                }
+                            }
+                        });
+                        
+                        console.log(`Successfully applied ${themeName} theme to viewer`);
+                        return;
+                        
+                    } catch (theme_error) {
+                        console.warn(`${themeName} theme failed:`, theme_error);
+                    }
+                }
+                
+            } catch (error) {
+                console.warn('Error applying pLDDT coloring to viewer:', error);
+            }
+        }
+        
+        // Load predicted structure with pLDDT coloring
+        async function loadPredictedStructure(pdbData) {
+            try {
+                // Clear existing structures and reset tracking
+                await viewer.plugin.clear();
+                predictedStructureIds.clear();
+                
+                // Load predicted structure
+                const blob = new Blob([pdbData], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                
+                const data = await viewer.plugin.builders.data.download({ url: url, isBinary: false });
+                const trajectory = await viewer.plugin.builders.structure.parseTrajectory(data, 'pdb');
+                const structure = await viewer.plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
+                
+                URL.revokeObjectURL(url);
+                
+                // Track this structure as predicted
+                if (structure && structure.cell) {
+                    predictedStructureIds.add(structure.cell.transform.ref);
+                    console.log('Added predicted structure to tracking:', structure.cell.transform.ref);
+                }
+                
+                // Apply pLDDT coloring specifically to this structure
+                await applyPLDDTColoringToStructure(structure);
+                
+                console.log('Predicted structure loaded with pLDDT coloring');
+                
+            } catch (error) {
+                console.error('Error loading predicted structure:', error);
+            }
+        }
+        
+        // Load structures for alignment
+        async function loadStructuresForAlignment(sequence, matchedFile) {
+            try {
+                // Clear existing structures and reset tracking
+                await viewer.plugin.clear();
+                predictedStructureIds.clear();
+                
+                // Load predicted structure
+                const blob1 = new Blob([sequence.pdbData], { type: 'text/plain' });
+                const url1 = URL.createObjectURL(blob1);
+                const data1 = await viewer.plugin.builders.data.download({ url: url1, isBinary: false });
+                const trajectory1 = await viewer.plugin.builders.structure.parseTrajectory(data1, 'pdb');
+                const structure1 = await viewer.plugin.builders.structure.hierarchy.applyPreset(trajectory1, 'default');
+                URL.revokeObjectURL(url1);
+                
+                // Track the predicted structure
+                if (structure1 && structure1.cell) {
+                    predictedStructureIds.add(structure1.cell.transform.ref);
+                    console.log('Added predicted structure to alignment tracking:', structure1.cell.transform.ref);
+                }
+                
+                // Apply pLDDT coloring to predicted structure
+                await applyPLDDTColoringToStructure(structure1);
+                
+                // Load matched structure (this will get regular coloring)
+                const blob2 = new Blob([matchedFile.data], { type: 'text/plain' });
+                const url2 = URL.createObjectURL(blob2);
+                const data2 = await viewer.plugin.builders.data.download({ url: url2, isBinary: false });
+                const trajectory2 = await viewer.plugin.builders.structure.parseTrajectory(data2, matchedFile.format);
+                const structure2 = await viewer.plugin.builders.structure.hierarchy.applyPreset(trajectory2, 'default');
+                URL.revokeObjectURL(url2);
+                
+                // Apply current color scheme to the non-predicted structure
+                if (structure2 && structure2.components) {
+                    await viewer.plugin.dataTransaction(async () => {
+                        await viewer.plugin.managers.structure.component.updateRepresentationsTheme(
+                            structure2.components, 
+                            { color: getColorThemeName(), params: getColorThemeParams() }
+                        );
+                    });
+                }
+                
+                // Start monitoring for RMSD values
+                startRMSDMonitoring(sequence);
+                
+                console.log('Both structures loaded for alignment - predicted with pLDDT, matched with current theme');
+            } catch (error) {
+                console.error('Error loading structures for alignment:', error);
+            }
+        }
+        
+        // Start monitoring for RMSD values in log
+        function startRMSDMonitoring(sequence) {
+            if (!viewer || !viewer.plugin) return;
+            
+            // Create a mutation observer to watch for log changes
+            const viewerContainer = document.getElementById('viewer-container');
+            if (!viewerContainer) return;
+
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList') {
+                        // Check for log entries containing RMSD
+                        const logEntries = viewerContainer.querySelectorAll('.msp-log-entry');
+                        logEntries.forEach(entry => {
+                            const text = entry.textContent || '';
+                            const rmsdMatch = text.match(/RMSD[:\s]+([0-9.]+)/i);
+                            if (rmsdMatch) {
+                                const rmsdValue = parseFloat(rmsdMatch[1]);
+                                updateSequenceRMSD(sequence, rmsdValue);
+                                observer.disconnect(); // Stop monitoring after finding RMSD
+                            }
+                        });
+                    }
+                });
+            });
+
+            observer.observe(viewerContainer, {
+                childList: true,
+                subtree: true
+            });
+
+            // Also check periodically for RMSD in any text content
+            const intervalId = setInterval(() => {
+                const allText = viewerContainer.textContent || '';
+                const rmsdMatch = allText.match(/RMSD[:\s]+([0-9.]+)/i);
+                if (rmsdMatch) {
+                    const rmsdValue = parseFloat(rmsdMatch[1]);
+                    updateSequenceRMSD(sequence, rmsdValue);
+                    clearInterval(intervalId);
+                    observer.disconnect();
+                }
+            }, 2000);
+
+            // Stop monitoring after 30 seconds
+            setTimeout(() => {
+                clearInterval(intervalId);
+                observer.disconnect();
+            }, 30000);
+        }
+        
+        // Update sequence RMSD score
+        function updateSequenceRMSD(sequence, rmsdValue) {
+            const index = parsedSequences.findIndex(seq => seq.header === sequence.header);
+            if (index !== -1) {
+                parsedSequences[index].rmsdScore = rmsdValue;
+                updateSequenceList();
+                console.log(`Updated RMSD for ${sequence.header}: ${rmsdValue.toFixed(3)}Å`);
+            }
+        }
+        
+        // Download sequence PDB
+        function downloadSequencePDB(index) {
+            const seq = parsedSequences[index];
+            if (!seq.pdbData) {
+                vscode.postMessage({
+                    command: 'showError',
+                    message: 'No PDB data available for this sequence'
+                });
+                return;
+            }
+            
+            try {
+                const filename = `${seq.header.replace(/[^a-zA-Z0-9]/g, '_')}_esmfold.pdb`;
+                
+                // Use VSCode save dialog
+                vscode.postMessage({
+                    command: 'downloadStructure',
+                    data: seq.pdbData,
+                    filename: filename,
+                    format: 'pdb'
+                });
+                
+                console.log(`Download initiated for ${seq.header}`);
+            } catch (error) {
+                console.error('Error downloading PDB:', error);
+                vscode.postMessage({
+                    command: 'showError',
+                    message: 'Error downloading PDB file: ' + error.message
+                });
+            }
+        }
+        
+        // Clear all sequences
+        function clearAllSequences() {
+            parsedSequences = [];
+            selectedSequenceIndex = -1;
+            updateSequenceList();
+            document.getElementById('parsed-sequences-section').style.display = 'none';
+            // Keep align-mode-section visible if seq alignment is enabled
+            // document.getElementById('align-mode-section').style.display = 'none';
+            document.getElementById('fasta-textarea').value = '';
+            document.getElementById('sequence-name').value = '';
+            document.getElementById('single-sequence-textarea').value = '';
+        }
+        
+        // Handle display mode changes
+        function handleDisplayModeChange() {
+            const dualRadio = document.getElementById('dual-session-radio');
+            const seqOnlyRadio = document.getElementById('seq-only-radio');
+            const alignRadio = document.getElementById('align-mode-radio');
+            
+            if (dualRadio.checked) {
+                currentDisplayMode = 'dual';
+            } else if (seqOnlyRadio.checked) {
+                currentDisplayMode = 'seq-only';
+            } else if (alignRadio.checked) {
+                currentDisplayMode = 'align';
+            }
+            
+            // If we have a selected sequence, update the display immediately
+            if (selectedSequenceIndex !== -1 && parsedSequences[selectedSequenceIndex]) {
+                const seq = parsedSequences[selectedSequenceIndex];
+                if (seq.status === 'completed' && seq.pdbData) {
+                    displaySequenceStructure(seq);
+                }
+            }
+            
+            updateViewerConfigForAlignment();
+        }
+        
+        // Toggle pLDDT info section
+        function togglePLDDTInfo() {
+            const toggle = document.getElementById('plddt-info-toggle');
+            const content = document.getElementById('plddt-info-content');
+            
+            if (toggle.checked) {
+                content.classList.add('active');
+            } else {
+                content.classList.remove('active');
+            }
+        }
+        
+        // Update viewer configuration for alignment
+        async function updateViewerConfigForAlignment() {
+            if (sequenceAlignmentEnabled && currentLayoutMode === 'single' && currentDisplayMode === 'align') {
+                // Enable log and selection mode for alignment
+                if (viewer && viewer.plugin) {
+                    try {
+                        // Update layout to show log and selection tools
+                        await viewer.plugin.layout.setProps({
+                            layoutShowLog: true,
+                            viewportShowSelectionMode: true
+                        });
+                        console.log('Alignment mode enabled - log and selection tools available');
+                    } catch (error) {
+                        console.warn('Could not update viewer layout for alignment:', error);
+                    }
+                }
+            } else {
+                // Disable log and selection mode
+                if (viewer && viewer.plugin) {
+                    try {
+                        await viewer.plugin.layout.setProps({
+                            layoutShowLog: false,
+                            viewportShowSelectionMode: false
+                        });
+                        console.log('Alignment mode disabled');
+                    } catch (error) {
+                        console.warn('Could not reset viewer layout:', error);
+                    }
+                }
+            }
+        }
+        
+        // Reset viewer configuration
+        function resetViewerConfig() {
+            if (viewer && viewer.plugin) {
+                console.log('Resetting viewer configuration');
+            }
+        }
+        
+        // Apply pLDDT confidence coloring to a specific structure (adapted from esmfold.html)
+        async function applyPLDDTColoringToStructure(structure) {
+            try {
+                console.log('Applying pLDDT coloring...');
+                
+                // Get the current structures from the viewer (like esmfold.html does)
+                const structures = viewer.plugin.managers.structure.hierarchy.current.structures;
+                
+                if (!structures || structures.length === 0) {
+                    console.warn('No structures found for pLDDT coloring');
+                    return;
+                }
+
+                console.log(`Applying pLDDT coloring to ${structures.length} structure(s)`);
+                
+                // Extract and debug pLDDT values from the structure (exactly like esmfold.html)
+                const structureData = structures[0].cell.obj?.data;
+                if (structureData) {
+                    console.log('Structure data found, creating custom pLDDT color theme...');
+                    
+                    try {
+                        // Get the first model to verify B-factor data exists
+                        const model = structureData.models[0];
+                        
+                        if (model.atomicConformation && model.atomicConformation.B_iso_or_equiv) {
+                            console.log('Found B_iso_or_equiv in atomicConformation');
+                            
+                            // Create custom pLDDT color theme with complete provider structure (from esmfold.html)
+                            const themeName = 'plddt-confidence-' + Math.random().toString(36).substring(7);
+                            
+                            // Create a complete color theme provider (exactly like esmfold.html)
+                            const PLDDTColorThemeProvider = {
+                                name: themeName,
+                                label: "pLDDT Confidence",
+                                category: "Validation",
+                                factory: (ctx, props) => {
+                                    return {
+                                        granularity: "group",
+                                        color: (location) => {
+                                            // Get B-factor value from the location
+                                            if (location.element !== undefined) {
+                                                const model = ctx.structure.models[0];
+                                                if (model && model.atomicConformation && model.atomicConformation.B_iso_or_equiv) {
+                                                    const bFactor = model.atomicConformation.B_iso_or_equiv.value(location.element) - 0.04;
+                                                    
+                                                    // ESMFold/AlphaFold pLDDT color scheme
+                                                    if (bFactor > 0.9) {
+                                                        return 0x0053D6; // Dark blue - very high confidence
+                                                    } else if (bFactor > 0.7) {
+                                                        return 0x65CBF3; // Light blue - confident
+                                                    } else if (bFactor > 0.5) {
+                                                        return 0xFFDB13; // Yellow - low confidence
+                                                    } else {
+                                                        return 0xFF7D45; // Orange - very low confidence
+                                                    }
+                                                }
+                                            }
+                                            return 0x777777; // Default gray
+                                        }
+                                    };
+                                },
+                                getParams: () => ({}),
+                                defaultValues: {},
+                                isApplicable: (ctx) => {
+                                    // Check if structure has B-factor data
+                                    const model = ctx.structure.models[0];
+                                    return !!(model && model.atomicConformation && model.atomicConformation.B_iso_or_equiv);
+                                }
+                            };
+                            
+                            // Register the color theme (exactly like esmfold.html)
+                            viewer.plugin.representation.structure.themes.colorThemeRegistry.add(
+                                PLDDTColorThemeProvider
+                            );
+                            console.log('Registered custom pLDDT color theme:', themeName);
+                            
+                            // Apply the custom theme using dataTransaction (exactly like esmfold.html)
+                            await viewer.plugin.dataTransaction(async () => {
+                                for (const structure of structures) {
+                                    if (structure.components && structure.components.length > 0) {
+                                        await viewer.plugin.managers.structure.component.updateRepresentationsTheme(
+                                            structure.components, 
+                                            { color: themeName }
+                                        );
+                                    }
+                                }
+                            });
+                            
+                            console.log('Successfully applied custom pLDDT color theme');
+                            return;
+                        }
+                        
+                    } catch (structure_error) {
+                        console.warn('Error creating custom color theme:', structure_error);
+                    }
+                }
+                
+                // Fallback to built-in themes (exactly like esmfold.html)
+                console.log('Falling back to built-in themes...');
+                const themeOptions = [
+                    'plddt-confidence',  // Direct pLDDT theme
+                    'uncertainty',       // B-factor uncertainty coloring  
+                    'atom-test',        // Generic atom property coloring
+                ];
+                
+                for (const themeName of themeOptions) {
+                    try {
+                        console.log(`Trying color theme: ${themeName}`);
+                        
+                        await viewer.plugin.dataTransaction(async () => {
+                            for (const structure of structures) {
+                                if (structure.components && structure.components.length > 0) {
+                                    await viewer.plugin.managers.structure.component.updateRepresentationsTheme(
+                                        structure.components, 
+                                        { color: themeName }
+                                    );
+                                }
+                            }
+                        });
+                        
+                        console.log(`Successfully applied ${themeName} color theme`);
+                        return; // Success, exit the function
+                        
+                    } catch (theme_error) {
+                        console.warn(`${themeName} theme failed:`, theme_error);
+                        // Continue to next theme
+                    }
+                }
+                
+                console.warn('All coloring options failed');
+
+            } catch (error) {
+                console.warn('Error applying pLDDT coloring:', error);
+            }
+        }
+        
+        // Apply pLDDT confidence coloring (simplified version) - kept for backwards compatibility
+        async function applyPLDDTColoring() {
+            try {
+                console.log('Applying pLDDT coloring to all structures...');
+                
+                // Get the current structures
+                const structures = viewer.plugin.managers.structure.hierarchy.current.structures;
+                
+                if (!structures || structures.length === 0) {
+                    console.warn('No structures found for pLDDT coloring');
+                    return;
+                }
+
+                // Apply to first structure (backwards compatibility)
+                if (structures.length > 0) {
+                    await applyPLDDTColoringToStructure(structures[0]);
+                }
+                
+            } catch (error) {
+                console.warn('Error applying pLDDT coloring:', error);
+            }
+        }
+
+        // Initialize the app
+        init().catch(error => console.error('Failed to initialize app:', error));
+    </script>
+</body>
+</html>

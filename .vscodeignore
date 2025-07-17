@@ -1,0 +1,90 @@
+# Source files
+src/**
+!src/webview.html
+tsconfig.json
+
+# Development dependencies
+node_modules/**
+.vscode/**
+.vscode-test/**
+
+# Build artifacts (keep only compiled JS)
+**/*.ts
+**/*.ts.map
+**/*.d.ts
+**/*.d.ts.map
+
+# Git and version control
+.git/**
+.gitignore
+.gitattributes
+
+# Package management
+package-lock.json
+yarn.lock
+.npmrc
+
+# Testing
+test/**
+**/test/**
+**/*.test.*
+**/*.spec.*
+coverage/**
+
+# Documentation (keep README and LICENSE)
+# Uncomment if you don't want these in the package:
+# CHANGELOG.md
+# docs/**
+
+# IDE and editor files
+.vscode/**
+.idea/**
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and temporary files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.tmp/**
+temp/**
+
+# Environment and config files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Linting and formatting
+.eslintcache
+.prettierignore
+
+# Backup files
+*.bak
+*.backup
+
+# Archive files
+*.zip
+*.tar.gz
+*.tgz
+
+# Screenshots and media (except the logo)
+screenshots/**
+*.png
+*.jpg
+*.jpeg
+*.gif
+# Keep the logo
+!media/logo.ico
