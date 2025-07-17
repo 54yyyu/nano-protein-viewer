@@ -181,6 +181,9 @@ If you use this extension in your research, please cite the underlying Mol* fram
 
 ## Version History
 
+### 1.0.1
+- Update README.md
+
 ### 1.0.0
 - Initial release
 - Basic PDB/mmCIF viewing with Molstar
