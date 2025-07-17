@@ -10,7 +10,7 @@ export declare class ProteinViewerPanel {
     private readonly _extensionUri;
     private _disposables;
     private constructor();
-    static render(extensionUri: vscode.Uri): void;
+    static render(extensionUri: vscode.Uri, accession?: string): void;
     static renderWithPDBFiles(extensionUri: vscode.Uri, files: FileData[]): void;
     static renderWithFolder(extensionUri: vscode.Uri, files: FileData[]): void;
     static renderWithFASTA(extensionUri: vscode.Uri, content: string): void;
@@ -20,6 +20,7 @@ export declare class ProteinViewerPanel {
     private _loadPDBFiles;
     private _loadFolder;
     private _loadFASTA;
+    private _loadAccession;
     private _handleRequestPDBFiles;
     private _handleRequestFolder;
     private _handleRequestFASTA;

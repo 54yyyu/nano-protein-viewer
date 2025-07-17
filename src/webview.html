@@ -8,6 +8,8 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/molstar@latest/build/viewer/molstar.css" />
     <!-- Molstar JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/molstar@latest/build/viewer/molstar.js"></script>
+    <!-- JSZip for creating ZIP files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -118,6 +120,44 @@
             border-bottom: 1px solid hsl(220, 13%, 91%);
         }
         
+        #file-list-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #file-list-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #download-all-files {
+            width: 24px !important;
+            height: 24px !important;
+            min-width: 24px !important;
+            padding: 4px !important;
+            margin: 0 !important;
+            font-size: 12px !important;
+            background: hsl(220, 13%, 91%) !important;
+            color: hsl(220, 9%, 46%) !important;
+            border-radius: 4px !important;
+            box-shadow: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        #download-all-files:hover {
+            background: hsl(220, 13%, 85%) !important;
+        }
+        
+        #download-all-files svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+        
         #file-list-header h3 {
             margin: 0;
             border: none;
@@ -128,6 +168,14 @@
         
         #file-list-panel.collapsed #file-list-header h3 {
             display: none;
+        }
+        
+        #file-list-panel.collapsed #file-list-header-left {
+            display: none;
+        }
+        
+        #file-list-panel.collapsed #download-all-files {
+            display: none !important;
         }
         
         #file-list-panel.collapsed #file-list-header {
@@ -200,6 +248,53 @@
             background-color: #d1e7dd;
             border-left: 3px solid #4CAF50;
             font-weight: bold;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .file-item-content {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .file-item-name {
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .file-download-icon {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            padding: 2px;
+        }
+        
+        .file-download-icon:hover {
+            opacity: 1;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-download-icon svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
         }
         /* --- Other Controls --- */
         button {
@@ -1240,8 +1335,17 @@
 
         <div id="file-list-panel">
              <div id="file-list-header">
-                <h3>Loaded Files</h3>
-                <button id="toggle-file-list" title="Collapse File List">[−]</button>
+                <div id="file-list-header-left">
+                    <h3>Loaded Files</h3>
+                </div>
+                <div id="file-list-header-right">
+                    <button id="download-all-files" title="Download All Files as ZIP" style="display: none;">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 15.5l-3.5-3.5h2.5v-6h2v6h2.5l-3.5 3.5zm7.5 3.5h-15v-2h15v2z"/>
+                        </svg>
+                    </button>
+                    <button id="toggle-file-list" title="Collapse File List">[−]</button>
+                </div>
             </div>
             <div id="file-history">No files loaded.</div>
         </div>
@@ -1517,6 +1621,9 @@
                 case 'loadFASTA':
                     handleVSCodeFASTA(message.content);
                     break;
+                case 'loadAccession':
+                    await handleVSCodeAccession(message.accession);
+                    break;
                 case 'clearFiles':
                     clearAllFiles();
                     break;
@@ -1698,6 +1805,90 @@
         function handleVSCodeFASTA(content) {
             document.getElementById('fasta-textarea').value = content;
             parseFastaInput();
+        }
+        
+        // Handle accession from VSCode
+        async function handleVSCodeAccession(accession) {
+            const loadingIndicator = document.getElementById('loading');
+            loadingIndicator.textContent = `Loading ${accession}...`;
+            loadingIndicator.style.display = 'block';
+            
+            try {
+                // Clear any existing files
+                loadedFiles = [];
+                currentFileIndex = -1;
+                
+                // Wait for viewer to be ready before processing
+                if (!viewer) {
+                    loadingIndicator.textContent = 'Initializing viewer...';
+                    let retries = 0;
+                    while (!viewer && retries < 100) {
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        retries++;
+                    }
+                    if (!viewer) {
+                        throw new Error('Viewer failed to initialize');
+                    }
+                }
+                
+                // Clear viewer first
+                await viewer.plugin.clear();
+                
+                let structureData;
+                let format = 'pdb';
+                
+                // Determine if it's PDB (4 characters) or AlphaFold (longer)
+                if (accession.length === 4) {
+                    // PDB ID
+                    loadingIndicator.textContent = `Fetching PDB ${accession}...`;
+                    const response = await fetch(`https://files.rcsb.org/download/${accession}.pdb`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch PDB ${accession}: ${response.status}`);
+                    }
+                    structureData = await response.text();
+                } else {
+                    // AlphaFold DB (UniProt ID)
+                    loadingIndicator.textContent = `Fetching AlphaFold ${accession}...`;
+                    const response = await fetch(`https://alphafold.ebi.ac.uk/files/AF-${accession}-F1-model_v4.pdb`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch AlphaFold ${accession}: ${response.status}`);
+                    }
+                    structureData = await response.text();
+                }
+                
+                // Validate structure data
+                if (!structureData || structureData.trim().length === 0) {
+                    throw new Error('Empty structure data received');
+                }
+                
+                // Add to loaded files
+                loadedFiles.push({
+                    name: `${accession}.pdb`,
+                    data: structureData,
+                    format: format
+                });
+                
+                currentFileIndex = 0;
+                
+                // Parse and display the structure
+                parseStructureFile(structureData, format, false);
+                
+                // Update UI
+                updateFileHistory();
+                document.getElementById('animation-controls').style.display = 'none';
+                stopAnimation();
+                
+                console.log(`Successfully loaded ${accession}`);
+                
+            } catch (error) {
+                console.error("Error loading accession:", error);
+                vscode.postMessage({
+                    command: 'showError',
+                    message: `Error loading ${accession}: ${error.message}`
+                });
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
         }
         
         // Clear all files
@@ -1909,6 +2100,7 @@
             document.getElementById('download-animation').addEventListener('click', toggleDownloadOptions);
             document.getElementById('download-mp4').addEventListener('click', () => downloadAnimation('mp4'));
             document.getElementById('download-gif').addEventListener('click', () => downloadAnimation('gif'));
+            document.getElementById('download-all-files').addEventListener('click', downloadAllFiles);
             
             // Sequence alignment event listeners
             document.getElementById('seq-alignment-toggle').addEventListener('change', toggleSequenceAlignment);
@@ -3261,7 +3453,10 @@
 
             if (loadedFiles.length === 0) {
                 historyContainer.textContent = 'No files loaded.';
+                document.getElementById('download-all-files').style.display = 'none';
                 return;
+            } else {
+                document.getElementById('download-all-files').style.display = 'flex';
             }
 
             let activeItem = null; // Keep track of the active item element
@@ -3274,16 +3469,38 @@
                     activeItem = fileItem; // Store the active item
                 }
                 
+                // Create file content container
+                const fileItemContent = document.createElement('div');
+                fileItemContent.className = 'file-item-content';
+                
                 // Create file name element
                 const fileName = document.createElement('span');
+                fileName.className = 'file-item-name';
                 fileName.textContent = file.name;
-                fileItem.appendChild(fileName);
+                fileItemContent.appendChild(fileName);
                 
                 // Add format badge
                 const formatBadge = document.createElement('span');
                 formatBadge.className = `format-badge ${file.format}`;
                 formatBadge.textContent = file.format.toUpperCase();
-                fileItem.appendChild(formatBadge);
+                fileItemContent.appendChild(formatBadge);
+                
+                fileItem.appendChild(fileItemContent);
+                
+                // Add download icon
+                const downloadIcon = document.createElement('div');
+                downloadIcon.className = 'file-download-icon';
+                downloadIcon.title = 'Download file';
+                downloadIcon.innerHTML = `
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 15.5l-3.5-3.5h2.5v-6h2v6h2.5l-3.5 3.5zm7.5 3.5h-15v-2h15v2z"/>
+                    </svg>
+                `;
+                downloadIcon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    downloadFile(index);
+                });
+                fileItem.appendChild(downloadIcon);
                 
                 fileItem.title = file.name;
 
@@ -3345,6 +3562,62 @@
             }
         }
 
+        // Download individual file
+        function downloadFile(index) {
+            if (index < 0 || index >= loadedFiles.length) return;
+            
+            const file = loadedFiles[index];
+            const extension = file.format === 'mmcif' ? 'cif' : 'pdb';
+            const filename = file.name.includes('.') ? file.name : `${file.name}.${extension}`;
+            
+            vscode.postMessage({
+                command: 'downloadStructure',
+                data: file.data,
+                filename: filename,
+                format: file.format
+            });
+        }
+
+        // Download all files as ZIP
+        function downloadAllFiles() {
+            if (loadedFiles.length === 0) {
+                vscode.postMessage({
+                    command: 'showError',
+                    message: 'No files to download'
+                });
+                return;
+            }
+
+            // Create ZIP file content
+            const zip = new JSZip();
+            
+            loadedFiles.forEach((file, index) => {
+                const extension = file.format === 'mmcif' ? 'cif' : 'pdb';
+                const filename = file.name.includes('.') ? file.name : `${file.name}.${extension}`;
+                zip.file(filename, file.data);
+            });
+
+            // Generate ZIP and download
+            zip.generateAsync({type: 'blob'}).then(function(content) {
+                const reader = new FileReader();
+                reader.onload = function() {
+                    const base64Data = reader.result.split(',')[1];
+                    
+                    vscode.postMessage({
+                        command: 'downloadZipFile',
+                        data: base64Data,
+                        filename: `protein_structures_${Date.now()}.zip`
+                    });
+                };
+                reader.readAsDataURL(content);
+            }).catch(function(error) {
+                console.error('Error creating ZIP file:', error);
+                vscode.postMessage({
+                    command: 'showError',
+                    message: 'Error creating ZIP file: ' + error.message
+                });
+            });
+        }
 
         // Handle Key Down for Navigation (update needed for sorted list)
          function handleKeyDown(event) {

@@ -1,8 +1,8 @@
 {
   "name": "nano-protein-viewer",
   "displayName": "Nano Protein Viewer",
-  "description": "Advanced protein structure visualization with Molstar, featuring sequence alignment, diffusion animations, and pLDDT confidence coloring",
-  "version": "1.0.1",
+  "description": "Lightweight protein structure viewer that supports grid view of multiple structures and more",
+  "version": "1.0.2",
   "publisher": "StevenYu",
   "author": {
     "name": "Steven Yu"
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/StevenYu/nano-protein-viewer.git"
+    "url": "https://github.com/54yyyu/nano-protein-viewer.git"
   },
   "license": "MIT",
   "categories": [

@@ -71,7 +71,7 @@ export class ProteinViewerPanel {
         );
     }
 
-    public static render(extensionUri: vscode.Uri) {
+    public static render(extensionUri: vscode.Uri, accession?: string) {
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
@@ -79,6 +79,10 @@ export class ProteinViewerPanel {
         // If we already have a panel, show it
         if (ProteinViewerPanel.currentPanel) {
             ProteinViewerPanel.currentPanel._panel.reveal(column);
+            // If accession is provided, load it
+            if (accession && accession.trim()) {
+                ProteinViewerPanel.currentPanel._loadAccession(accession.trim());
+            }
             return;
         }
 
@@ -99,6 +103,11 @@ export class ProteinViewerPanel {
         );
 
         ProteinViewerPanel.currentPanel = new ProteinViewerPanel(panel, extensionUri);
+        
+        // If accession is provided, load it after the panel is created
+        if (accession && accession.trim()) {
+            ProteinViewerPanel.currentPanel._loadAccession(accession.trim());
+        }
     }
 
     public static renderWithPDBFiles(extensionUri: vscode.Uri, files: FileData[]) {
@@ -225,6 +234,14 @@ export class ProteinViewerPanel {
         this._panel.webview.postMessage({
             command: 'loadFASTA',
             content: content
+        });
+    }
+
+    private _loadAccession(accession: string) {
+        // Send accession to webview
+        this._panel.webview.postMessage({
+            command: 'loadAccession',
+            accession: accession
         });
     }
 

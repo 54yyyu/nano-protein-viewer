@@ -181,6 +181,10 @@ If you use this extension in your research, please cite the underlying Mol* fram
 
 ## Version History
 
+### 1.0.2
+- Enhanced start command with input box for PDB/AFDB ID
+- Added download icons to individual files and download all files as ZIP functionality
+
 ### 1.0.1
 - Update README.md
 

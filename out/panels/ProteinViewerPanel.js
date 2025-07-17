@@ -70,13 +70,17 @@ class ProteinViewerPanel {
             }
         }, null, this._disposables);
     }
-    static render(extensionUri) {
+    static render(extensionUri, accession) {
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
         // If we already have a panel, show it
         if (ProteinViewerPanel.currentPanel) {
             ProteinViewerPanel.currentPanel._panel.reveal(column);
+            // If accession is provided, load it
+            if (accession && accession.trim()) {
+                ProteinViewerPanel.currentPanel._loadAccession(accession.trim());
+            }
             return;
         }
         // Otherwise, create a new panel
@@ -90,6 +94,10 @@ class ProteinViewerPanel {
             ]
         });
         ProteinViewerPanel.currentPanel = new ProteinViewerPanel(panel, extensionUri);
+        // If accession is provided, load it after the panel is created
+        if (accession && accession.trim()) {
+            ProteinViewerPanel.currentPanel._loadAccession(accession.trim());
+        }
     }
     static renderWithPDBFiles(extensionUri, files) {
         ProteinViewerPanel.render(extensionUri);
@@ -198,6 +206,13 @@ class ProteinViewerPanel {
         this._panel.webview.postMessage({
             command: 'loadFASTA',
             content: content
+        });
+    }
+    _loadAccession(accession) {
+        // Send accession to webview
+        this._panel.webview.postMessage({
+            command: 'loadAccession',
+            accession: accession
         });
     }
     // ESMFold functionality moved to webview interface

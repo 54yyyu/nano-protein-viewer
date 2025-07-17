@@ -7,8 +7,14 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('Nano Protein Viewer extension is now active!');
 
     // Register command to start the protein viewer
-    const startCommand = vscode.commands.registerCommand('nano-protein-viewer.start', () => {
-        ProteinViewerPanel.render(context.extensionUri);
+    const startCommand = vscode.commands.registerCommand('nano-protein-viewer.start', async () => {
+        const accession = await vscode.window.showInputBox({
+            value: '',
+            placeHolder: 'Enter a PDB or AlphaFoldDB (UniProt) accession (or leave empty to start without loading)',
+            prompt: 'PDB/AFDB ID (optional)'
+        });
+        
+        ProteinViewerPanel.render(context.extensionUri, accession);
     });
 
     // Register command to load PDB files

@@ -34,6 +34,8 @@ coverage/**
 # Documentation (keep README and LICENSE)
 # Uncomment if you don't want these in the package:
 # CHANGELOG.md
+UPDATE.md
+*.vsix
 # docs/**
 
 # IDE and editor files
