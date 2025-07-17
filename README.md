@@ -183,10 +183,11 @@ If you use this extension in your research, please cite the underlying Mol* fram
 
 ### 1.0.2
 - Enhanced start command with input box for PDB/AFDB ID
-- Added download icons to individual files and download all files as ZIP functionality
+- Added download icon to download all files as ZIP functionality
+- Minor UI updates
 
 ### 1.0.1
-- Update README.md
+- Updated README.md
 
 ### 1.0.0
 - Initial release

@@ -827,6 +827,49 @@
         .sequence-name {
             font-weight: bold;
             margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: hsl(220, 9%, 46%); /* Darker text color */
+        }
+        
+        .sequence-name-content {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .sequence-rmsd-section {
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        
+        .sequence-download-icon {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            padding: 2px;
+            color: hsl(220, 9%, 30%); /* Darker icon color */
+        }
+        
+        .sequence-download-icon:hover {
+            opacity: 1;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .sequence-download-icon svg {
+            width: 12px;
+            height: 12px;
+            fill: currentColor;
         }
         
         .sequence-preview {
@@ -1675,7 +1718,8 @@
                     loadedFiles.push({
                         name: file.name,
                         data: file.content,
-                        format: format
+                        format: format,
+                        source: 'local'
                     });
                 });
                 
@@ -1765,7 +1809,8 @@
                         loadedFiles.push({
                             name: file.name,
                             data: file.content,
-                            format: format
+                            format: format,
+                            source: 'local'
                         });
                     }
                 });
@@ -1865,7 +1910,8 @@
                 loadedFiles.push({
                     name: `${accession}.pdb`,
                     data: structureData,
-                    format: format
+                    format: format,
+                    source: 'remote' // Mark as remote (PDB/AlphaFold)
                 });
                 
                 currentFileIndex = 0;
@@ -2195,7 +2241,8 @@
                         loadedFiles.push({ 
                             name: result.name, 
                             data: result.data,
-                            format: result.format 
+                            format: result.format,
+                            source: 'local'
                         });
                     });
 
@@ -2280,7 +2327,8 @@
                          loadedFiles.push({ 
                              name: result.name, 
                              data: result.data,
-                             format: result.format 
+                             format: result.format,
+                             source: 'local'
                          });
                          newFilesAddedToMainList = true;
                      }
@@ -3487,20 +3535,22 @@
                 
                 fileItem.appendChild(fileItemContent);
                 
-                // Add download icon
-                const downloadIcon = document.createElement('div');
-                downloadIcon.className = 'file-download-icon';
-                downloadIcon.title = 'Download file';
-                downloadIcon.innerHTML = `
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12 15.5l-3.5-3.5h2.5v-6h2v6h2.5l-3.5 3.5zm7.5 3.5h-15v-2h15v2z"/>
-                    </svg>
-                `;
-                downloadIcon.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    downloadFile(index);
-                });
-                fileItem.appendChild(downloadIcon);
+                // Add download icon only for remote or predicted files
+                if (file.source === 'remote' || file.source === 'predicted') {
+                    const downloadIcon = document.createElement('div');
+                    downloadIcon.className = 'file-download-icon';
+                    downloadIcon.title = 'Download file';
+                    downloadIcon.innerHTML = `
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 15.5l-3.5-3.5h2.5v-6h2v6h2.5l-3.5 3.5zm7.5 3.5h-15v-2h15v2z"/>
+                        </svg>
+                    `;
+                    downloadIcon.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        downloadFile(index);
+                    });
+                    fileItem.appendChild(downloadIcon);
+                }
                 
                 fileItem.title = file.name;
 
@@ -3863,9 +3913,17 @@
             listContainer.innerHTML = parsedSequences.map((seq, index) => `
                 <div class="sequence-item ${seq.status} ${selectedSequenceIndex === index ? 'active' : ''}" onclick="selectSequence(${index})">
                     <div class="sequence-name">
-                        ${seq.header}
-                        ${seq.rmsdScore ? `<span class="rmsd-score">RMSD: ${seq.rmsdScore.toFixed(3)}Å</span>` : ''}
-                        ${seq.status === 'completed' ? `<button onclick="event.stopPropagation(); downloadSequencePDB(${index})" style="float: right; padding: 2px 6px; font-size: 10px; margin-left: 5px;">Download PDB</button>` : ''}
+                        <div class="sequence-name-content">
+                            <span>${seq.header}</span>
+                            ${seq.status === 'completed' ? `
+                                <div class="sequence-download-icon" onclick="event.stopPropagation(); downloadSequencePDB(${index})" title="Download PDB">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M12 15.5l-3.5-3.5h2.5v-6h2v6h2.5l-3.5 3.5zm7.5 3.5h-15v-2h15v2z"/>
+                                    </svg>
+                                </div>
+                            ` : ''}
+                        </div>
+                        ${seq.rmsdScore ? `<div class="sequence-rmsd-section"><span class="rmsd-score">RMSD: ${seq.rmsdScore.toFixed(3)}Å</span></div>` : ''}
                     </div>
                     <div class="sequence-preview">${seq.sequence.substring(0, 40)}${seq.sequence.length > 40 ? '...' : ''}</div>
                     <div class="sequence-status">
@@ -3970,6 +4028,7 @@
                         name: predictedFileName,
                         data: pdbData,
                         format: 'pdb',
+                        source: 'predicted', // ESMFold predictions
                         isPredicted: true
                     });
                 }
