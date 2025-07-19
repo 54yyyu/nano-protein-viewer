@@ -7,13 +7,13 @@ A simple but powerful VSCode extension for visualizing protein structures using 
 ## Features
 
 ### 🧬 Protein Structure Visualization
-- **PDB/mmCIF Support**: Load and visualize protein structures from PDB and mmCIF files
+- **Multi-Format Support**: Load and visualize molecular structures from PDB, mmCIF, PDBQT, GRO, XYZ, MOL, MOL2, and SDF files
 - **Interactive 3D Viewer**: Powered by Molstar for high-performance molecular visualization
 - **Multiple Color Schemes**: Custom colors, element-based, residue-based, and chain-based coloring
 - **Grid View**: Display multiple structures simultaneously in a grid layout
 
 ### 🔄 Diffusion Animation Support
-- **Sequence Loading**: Load entire folders of PDB files as diffusion sequences
+- **Sequence Loading**: Load entire folders of structure files as diffusion sequences
 - **Animation Controls**: Play, pause, step through frames with speed control
 - **Download Animations**: Export animations as video files or frame sequences
 
@@ -43,25 +43,25 @@ A simple but powerful VSCode extension for visualizing protein structures using 
 
 1. **Open Command Palette**: `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac)
 2. **Run Command**: Type "Nano Protein Viewer" and select "Open Nano Protein Viewer"
-3. **Load Files**: Use the VSCode integration buttons to load PDB files, folders, or FASTA sequences
+3. **Load Files**: Use the VSCode integration buttons to load structure files, folders, or FASTA sequences
 
 ### Context Menu Integration
 
-- **Right-click PDB/mmCIF files**: Select "Load PDB/mmCIF Files in Nano Viewer"
+- **Right-click structure files**: Select "Launch Nano Viewer from file(s)" 
 - **Right-click folders**: Select "Load Folder in Nano Viewer" to load as diffusion sequence
 - **Right-click FASTA files**: Select "Load FASTA in Nano Viewer"
 
 ### Commands
 
 - `nano-protein-viewer.start`: Open the protein viewer
-- `nano-protein-viewer.loadPDBFiles`: Load PDB/mmCIF files
+- `nano-protein-viewer.loadPDBFiles`: Launch Nano Viewer from file(s)
 - `nano-protein-viewer.loadFolder`: Load folder as diffusion sequence
 - `nano-protein-viewer.loadFASTA`: Load FASTA file
 
 ### Loading Structure Files
 
-1. **Single Files**: Use "Load PDB Files" button or right-click context menu
-2. **Multiple Files**: Select multiple PDB/mmCIF files to load simultaneously
+1. **Single Files**: Use "Load Structure Files" button or right-click context menu
+2. **Multiple Files**: Select multiple structure files to load simultaneously
 3. **Folder Loading**: Load entire folders for diffusion sequence animations
 
 ### Sequence Alignment Workflow
@@ -107,7 +107,7 @@ The extension works out of the box with no additional configuration required. Al
 
 ## Supported File Formats
 
-- **Structure Files**: `.pdb`, `.PDB`, `.cif`, `.CIF`, `.mmcif`, `.MMCIF`
+- **Structure Files**: `.pdb`, `.PDB`, `.cif`, `.CIF`, `.mmcif`, `.MMCIF`, `.pdbqt`, `.PDBQT`, `.gro`, `.GRO`, `.xyz`, `.XYZ`, `.mol`, `.MOL`, `.mol2`, `.MOL2`, `.sdf`, `.SDF`
 - **Sequence Files**: `.fasta`, `.FASTA`, `.fa`, `.FA`, `.fas`, `.FAS`
 
 ## Keyboard Shortcuts
@@ -132,14 +132,14 @@ The extension works out of the box with no additional configuration required. Al
 ### Common Issues
 
 1. **Viewer Not Loading**: Check internet connection for Molstar CDN resources
-2. **File Format Errors**: Ensure files are valid PDB/mmCIF format
+2. **File Format Errors**: Ensure files are valid molecular structure format
 3. **ESMFold Errors**: Check sequence length (10-1000 amino acids) and internet connection
 4. **Performance Issues**: Close unused grid viewers or reduce animation speed
 
 ### Error Messages
 
-- **"Invalid PDB/mmCIF file"**: File format is not recognized or corrupted
-- **"No valid structures found"**: No PDB/mmCIF files in selected folder
+- **"Invalid structure file"**: File format is not recognized or corrupted
+- **"No valid structures found"**: No structure files in selected folder
 - **"ESMFold API error"**: Network issue or invalid sequence
 - **"Sequence too short/long"**: ESMFold requires 10-1000 amino acids
 
@@ -181,6 +181,10 @@ If you use this extension in your research, please cite the underlying Mol* fram
 
 ## Version History
 
+### 1.0.3
+- Added support for additional file formats: PDBQT, GRO, XYZ, MOL, MOL2, SDF
+- Minor UI updates
+
 ### 1.0.2
 - Enhanced start command with input box for PDB/AFDB ID
 - Added download icon to download all files as ZIP functionality
@@ -191,7 +195,7 @@ If you use this extension in your research, please cite the underlying Mol* fram
 
 ### 1.0.0
 - Initial release
-- Basic PDB/mmCIF viewing with Molstar
+- Basic structure viewing with Molstar
 - Sequence alignment and ESMFold integration
 - Diffusion animation support
 - Grid view and dual session modes

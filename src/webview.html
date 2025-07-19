@@ -606,6 +606,30 @@
             background-color: #cfe2ff;
             color: #084298;
         }
+        .format-badge.pdbqt {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .format-badge.gro {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .format-badge.xyz {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .format-badge.mol {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .format-badge.mol2 {
+            background-color: #fce4ec;
+            color: #880e4f;
+        }
+        .format-badge.sdf {
+            background-color: #e1f5fe;
+            color: #01579b;
+        }
         
         /* View Mode Controls - Removed, using cartoon mode only */
         
@@ -1711,8 +1735,23 @@
                     
                     // Determine format
                     let format = 'pdb';
-                    if (file.name.toLowerCase().endsWith('.cif') || file.name.toLowerCase().endsWith('.mmcif')) {
+                    const fileName = file.name.toLowerCase();
+                    if (fileName.endsWith('.pdb')) {
+                        format = 'pdb';
+                    } else if (fileName.endsWith('.cif') || fileName.endsWith('.mmcif')) {
                         format = 'mmcif';
+                    } else if (fileName.endsWith('.pdbqt')) {
+                        format = 'pdbqt';
+                    } else if (fileName.endsWith('.gro')) {
+                        format = 'gro';
+                    } else if (fileName.endsWith('.xyz')) {
+                        format = 'xyz';
+                    } else if (fileName.endsWith('.mol')) {
+                        format = 'mol';
+                    } else if (fileName.endsWith('.mol2')) {
+                        format = 'mol2';
+                    } else if (fileName.endsWith('.sdf')) {
+                        format = 'sdf';
                     }
                     
                     loadedFiles.push({
@@ -1790,8 +1829,23 @@
                 files.forEach(file => {
                     // Determine format
                     let format = 'pdb';
-                    if (file.name.toLowerCase().endsWith('.cif') || file.name.toLowerCase().endsWith('.mmcif')) {
+                    const fileName = file.name.toLowerCase();
+                    if (fileName.endsWith('.pdb')) {
+                        format = 'pdb';
+                    } else if (fileName.endsWith('.cif') || fileName.endsWith('.mmcif')) {
                         format = 'mmcif';
+                    } else if (fileName.endsWith('.pdbqt')) {
+                        format = 'pdbqt';
+                    } else if (fileName.endsWith('.gro')) {
+                        format = 'gro';
+                    } else if (fileName.endsWith('.xyz')) {
+                        format = 'xyz';
+                    } else if (fileName.endsWith('.mol')) {
+                        format = 'mol';
+                    } else if (fileName.endsWith('.mol2')) {
+                        format = 'mol2';
+                    } else if (fileName.endsWith('.sdf')) {
+                        format = 'sdf';
                     }
                     
                     const stepMatch = file.name.match(/(\d+)/);
@@ -1848,6 +1902,13 @@
         
         // Handle FASTA from VSCode
         function handleVSCodeFASTA(content) {
+            // Auto-enable sequence alignment when loading FASTA from VSCode
+            const alignmentToggle = document.getElementById('seq-alignment-toggle');
+            if (!alignmentToggle.checked) {
+                alignmentToggle.checked = true;
+                toggleSequenceAlignment();
+            }
+            
             document.getElementById('fasta-textarea').value = content;
             parseFastaInput();
         }
@@ -1918,6 +1979,9 @@
                 
                 // Parse and display the structure
                 parseStructureFile(structureData, format, false);
+                
+                // Set color mode to chain for fetched PDB/AFDB structures
+                await changeColorMode('chain');
                 
                 // Update UI
                 updateFileHistory();
@@ -2025,11 +2089,24 @@
                  const reader = new FileReader();
                  reader.onload = (event) => {
                      // Determine file format
-                     let format = 'unknown';
-                     if (file.name.toLowerCase().endsWith('.pdb')) {
+                     let format = 'pdb'; // Default to pdb instead of unknown
+                     const fileName = file.name.toLowerCase();
+                     if (fileName.endsWith('.pdb')) {
                          format = 'pdb';
-                     } else if (file.name.toLowerCase().endsWith('.cif')) {
+                     } else if (fileName.endsWith('.cif') || fileName.endsWith('.mmcif')) {
                          format = 'mmcif';
+                     } else if (fileName.endsWith('.pdbqt')) {
+                         format = 'pdbqt';
+                     } else if (fileName.endsWith('.gro')) {
+                         format = 'gro';
+                     } else if (fileName.endsWith('.xyz')) {
+                         format = 'xyz';
+                     } else if (fileName.endsWith('.mol')) {
+                         format = 'mol';
+                     } else if (fileName.endsWith('.mol2')) {
+                         format = 'mol2';
+                     } else if (fileName.endsWith('.sdf')) {
+                         format = 'sdf';
                      }
                      resolve({ 
                          name: file.name, 
@@ -2296,12 +2373,14 @@
              // Filter for structure files
              const structureFilesInput = Array.from(files).filter(file => {
                  const lowerName = file.name.toLowerCase();
-                 return lowerName.endsWith('.pdb') || lowerName.endsWith('.cif');
+                 return lowerName.endsWith('.pdb') || lowerName.endsWith('.cif') || lowerName.endsWith('.mmcif') || 
+                        lowerName.endsWith('.pdbqt') || lowerName.endsWith('.gro') || lowerName.endsWith('.xyz') || 
+                        lowerName.endsWith('.mol') || lowerName.endsWith('.mol2') || lowerName.endsWith('.sdf');
              });
              
              if (structureFilesInput.length === 0) {
                  loadingIndicator.style.display = 'none';
-                 alert('No PDB or mmCIF files found in the selected folder.');
+                 alert('No structure files found in the selected folder.');
                  return;
              }
 
@@ -2568,7 +2647,18 @@
                 const detectedFormat = format || detectFileFormat(fileData);
                 
                 // Create blob with proper MIME type
-                const mimeType = detectedFormat === 'mmcif' ? 'chemical/x-mmcif' : 'chemical/x-pdb';
+                const getMimeType = (format) => {
+                    switch (format) {
+                        case 'mmcif': return 'chemical/x-mmcif';
+                        case 'gro': return 'chemical/x-gromacs-gro';
+                        case 'xyz': return 'chemical/x-xyz';
+                        case 'mol': return 'chemical/x-mdl-molfile';
+                        case 'mol2': return 'chemical/x-mol2';
+                        case 'sdf': return 'chemical/x-mdl-sdfile';
+                        default: return 'chemical/x-pdb';
+                    }
+                };
+                const mimeType = getMimeType(detectedFormat);
                 const blob = new Blob([fileData], { type: mimeType });
                 const blobUrl = URL.createObjectURL(blob);
                 
@@ -2582,10 +2672,18 @@
                     // Parse trajectory 
                     const formatMapping = {
                         'mmcif': 'mmcif',
-                        'pdb': 'pdb'
+                        'pdb': 'pdb',
+                        'pdbqt': 'pdbqt',
+                        'gro': 'gro',
+                        'xyz': 'xyz',
+                        'mol': 'mol',
+                        'mol2': 'mol2',
+                        'sdf': 'sdf',
+                        'unknown': 'pdb'
                     };
                     
                     const molstarFormat = formatMapping[detectedFormat] || 'pdb';
+                    console.log(`Loading file with format: ${detectedFormat} -> Molstar format: ${molstarFormat}`);
                     const trajectory = await plugin.builders.structure.parseTrajectory(data, molstarFormat);
                     
                     // Apply default preset
@@ -2593,6 +2691,12 @@
                     
                     // Store structure reference (for tracking)
                     currentModels = ['loaded'];
+                    
+                    // Set default color mode based on format
+                    if (['xyz', 'sdf', 'mol', 'mol2'].includes(format)) {
+                        currentColorMode = 'element';
+                        updateColorModeUI();
+                    }
                     
                     // Apply current color theme after loading structure
                     await updateColorTheme(getColorThemeName(), getColorThemeParams());
@@ -3145,7 +3249,18 @@
                 }
                 
                 // Create blob with proper MIME type
-                const mimeType = file.format === 'mmcif' ? 'chemical/x-mmcif' : 'chemical/x-pdb';
+                const getMimeType = (format) => {
+                    switch (format) {
+                        case 'mmcif': return 'chemical/x-mmcif';
+                        case 'gro': return 'chemical/x-gromacs-gro';
+                        case 'xyz': return 'chemical/x-xyz';
+                        case 'mol': return 'chemical/x-mdl-molfile';
+                        case 'mol2': return 'chemical/x-mol2';
+                        case 'sdf': return 'chemical/x-mdl-sdfile';
+                        default: return 'chemical/x-pdb';
+                    }
+                };
+                const mimeType = getMimeType(file.format);
                 const blob = new Blob([file.data], { type: mimeType });
                 const blobUrl = URL.createObjectURL(blob);
                 
@@ -3162,17 +3277,31 @@
                     // Parse trajectory 
                     const formatMapping = {
                         'mmcif': 'mmcif',
-                        'pdb': 'pdb'
+                        'pdb': 'pdb',
+                        'pdbqt': 'pdbqt',
+                        'gro': 'gro',
+                        'xyz': 'xyz',
+                        'mol': 'mol',
+                        'mol2': 'mol2',
+                        'sdf': 'sdf',
+                        'unknown': 'pdb'
                     };
                     
                     const molstarFormat = formatMapping[file.format] || 'pdb';
+                    console.log(`Loading grid file: ${file.name} with format: ${file.format} -> Molstar format: ${molstarFormat}`);
                     const trajectory = await plugin.builders.structure.parseTrajectory(data, molstarFormat);
                     
                     // Apply default preset
                     await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
                     
-                    // Apply current color theme after structure is loaded
-                    await applyColorThemeToViewer(gridViewer);
+                    // Set default color mode based on format for grid viewers
+                    if (['xyz', 'sdf', 'mol', 'mol2'].includes(file.format)) {
+                        // For grid viewers, we need to apply element coloring directly
+                        await applyElementColoringToViewer(gridViewer);
+                    } else {
+                        // Apply current color theme after structure is loaded
+                        await applyColorThemeToViewer(gridViewer);
+                    }
                     
                 } finally {
                     // Clean up blob URL
@@ -3210,6 +3339,34 @@
                 }
             } catch (error) {
                 console.error('Error applying color theme to viewer:', error);
+            }
+        }
+        
+        async function applyElementColoringToViewer(targetViewer) {
+            if (!targetViewer) {
+                console.warn('Target viewer is null, skipping element coloring');
+                return;
+            }
+            
+            try {
+                const plugin = targetViewer.plugin;
+                const structures = plugin.managers.structure.hierarchy.current.structures;
+                
+                for (const structure of structures) {
+                    for (const component of structure.components) {
+                        if (component.representations) {
+                            for (const repr of component.representations) {
+                                const update = plugin.build().to(repr.cell).update({
+                                    ...repr.cell.transform.params,
+                                    colorTheme: { name: 'element-symbol', params: {} }
+                                });
+                                await update.commit();
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error applying element coloring to viewer:', error);
             }
         }
         
@@ -3617,7 +3774,7 @@
             if (index < 0 || index >= loadedFiles.length) return;
             
             const file = loadedFiles[index];
-            const extension = file.format === 'mmcif' ? 'cif' : 'pdb';
+            const extension = file.format === 'mmcif' ? 'cif' : file.format;
             const filename = file.name.includes('.') ? file.name : `${file.name}.${extension}`;
             
             vscode.postMessage({
@@ -3642,7 +3799,7 @@
             const zip = new JSZip();
             
             loadedFiles.forEach((file, index) => {
-                const extension = file.format === 'mmcif' ? 'cif' : 'pdb';
+                const extension = file.format === 'mmcif' ? 'cif' : file.format;
                 const filename = file.name.includes('.') ? file.name : `${file.name}.${extension}`;
                 zip.file(filename, file.data);
             });
@@ -4059,7 +4216,7 @@
             // If sequence name is "sample_0", look for exactly "sample_0.pdb" or "sample_0.cif"
             let match = loadedFiles.find(file => {
                 // Remove file extension from filename
-                const fileNameWithoutExt = file.name.replace(/\.(pdb|cif|mmcif)$/i, '');
+                const fileNameWithoutExt = file.name.replace(/\.(pdb|cif|mmcif|pdbqt|gro|xyz|mol|mol2|sdf)$/i, '');
                 // Case insensitive exact comparison
                 return fileNameWithoutExt.toLowerCase() === sequenceName.toLowerCase();
             });

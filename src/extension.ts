@@ -102,21 +102,47 @@ export async function createTempFile(content: string, extension: string = '.pdb'
     return tempFilePath;
 }
 
-// Helper function to validate PDB/mmCIF file
+// Helper function to validate structure file
 export function validateStructureFile(content: string): boolean {
-    // Basic validation - check for common PDB/mmCIF markers
+    // Basic validation - check for common structure format markers
     const pdbMarkers = ['ATOM', 'HETATM', 'HEADER', 'TITLE'];
     const mmcifMarkers = ['data_', '_atom_site', '_struct'];
+    const xyzMarkers = ['ATOM', 'REMARK'];
+    const molMarkers = ['MOL', 'COUNTS', 'ATOM'];
+    const sdfMarkers = ['MOL', '$$$$'];
+    const groMarkers = ['ATOM', 'GRO'];
     
     const contentUpper = content.toUpperCase();
+    const contentLines = content.split('\n');
     
-    // Check for PDB markers
+    // Check for PDB/PDBQT markers (same format)
     if (pdbMarkers.some(marker => contentUpper.includes(marker))) {
         return true;
     }
     
     // Check for mmCIF markers
     if (mmcifMarkers.some(marker => contentUpper.includes(marker))) {
+        return true;
+    }
+    
+    // Check for XYZ format (starts with number of atoms)
+    if (contentLines.length > 0 && /^\s*\d+\s*$/.test(contentLines[0])) {
+        return true;
+    }
+    
+    // Check for MOL/MOL2/SDF markers
+    if (molMarkers.some(marker => contentUpper.includes(marker)) || 
+        sdfMarkers.some(marker => contentUpper.includes(marker))) {
+        return true;
+    }
+    
+    // Check for GRO format markers
+    if (groMarkers.some(marker => contentUpper.includes(marker))) {
+        return true;
+    }
+    
+    // If content has coordinate-like data, assume it's valid
+    if (/\d+\.\d+\s+\d+\.\d+\s+\d+\.\d+/.test(content)) {
         return true;
     }
     
@@ -134,6 +160,30 @@ export function detectFileFormat(filename: string, content: string): string {
     
     if (extension === '.pdb') {
         return 'pdb';
+    }
+    
+    if (extension === '.pdbqt') {
+        return 'pdbqt';
+    }
+    
+    if (extension === '.gro') {
+        return 'gro';
+    }
+    
+    if (extension === '.xyz') {
+        return 'xyz';
+    }
+    
+    if (extension === '.mol') {
+        return 'mol';
+    }
+    
+    if (extension === '.mol2') {
+        return 'mol2';
+    }
+    
+    if (extension === '.sdf') {
+        return 'sdf';
     }
     
     // Check content if extension is ambiguous

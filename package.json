@@ -2,7 +2,7 @@
   "name": "nano-protein-viewer",
   "displayName": "Nano Protein Viewer",
   "description": "Lightweight protein structure viewer that supports grid view of multiple structures and more",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "StevenYu",
   "author": {
     "name": "Steven Yu"
@@ -55,7 +55,7 @@
       },
       {
         "command": "nano-protein-viewer.loadPDBFiles",
-        "title": "Load PDB/mmCIF Files in Nano Viewer"
+        "title": "Launch Nano Viewer from file(s)"
       },
       {
         "command": "nano-protein-viewer.loadFolder",
@@ -69,7 +69,7 @@
     "menus": {
       "explorer/context": [
         {
-          "when": "resourceExtname == .pdb || resourceExtname == .PDB || resourceExtname == .mmcif || resourceExtname == .MMCIF || resourceExtname == .cif || resourceExtname == .CIF",
+          "when": "resourceExtname == .pdb || resourceExtname == .PDB || resourceExtname == .mmcif || resourceExtname == .MMCIF || resourceExtname == .cif || resourceExtname == .CIF || resourceExtname == .pdbqt || resourceExtname == .PDBQT || resourceExtname == .gro || resourceExtname == .GRO || resourceExtname == .xyz || resourceExtname == .XYZ || resourceExtname == .mol || resourceExtname == .MOL || resourceExtname == .mol2 || resourceExtname == .MOL2 || resourceExtname == .sdf || resourceExtname == .SDF",
           "command": "nano-protein-viewer.loadPDBFiles",
           "group": "navigation"
         },
