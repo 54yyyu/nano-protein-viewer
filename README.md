@@ -1,5 +1,7 @@
 # Nano Protein Viewer VSCode Extension
 
+[![vscode downloads](https://img.shields.io/visual-studio-marketplace/i/StevenYu.nano-protein-viewer)](https://marketplace.visualstudio.com/items?itemName=StevenYu.nano-protein-viewer)
+
 ![Logo](media/logo.ico)
 
 A simple but powerful VSCode extension for visualizing protein structures using the Molstar framework, featuring advanced capabilities for sequence alignment, diffusion animations, and confidence scoring.
