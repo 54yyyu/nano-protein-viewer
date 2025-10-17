@@ -37,9 +37,15 @@
             max-width: 320px;
             max-height: calc(100vh - 20px);
             overflow-y: auto;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             transition: all 0.3s ease;
+        }
+
+        #controls-content {
+            overflow-y: visible;
+            overflow-x: hidden;
         }
         
         #controls.collapsed {
@@ -662,26 +668,193 @@
             padding: 10px 0;
             border-top: 1px solid #ddd;
         }
-        .color-mode-buttons {
+
+        .color-controls-right {
             display: flex;
-            gap: 2px;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 10px;
-            flex-wrap: wrap;
         }
-        .color-mode-buttons button {
-            flex: 1;
-            padding: 6px 8px;
+
+        /* Color Mode Dropdown */
+        .color-mode-dropdown {
+            position: relative;
+        }
+
+        .color-mode-toggle {
+            background: hsl(0 0% 100%);
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+            border-radius: 6px;
+            padding: 6px 12px;
             font-size: 12px;
-            margin: 0;
-            min-width: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: hsl(220, 9%, 46%);
+            transition: all 0.2s ease;
+            min-width: 100px;
         }
-        .color-mode-buttons button.active {
-            background-color: hsl(222.2 84% 4.9%);
+
+        .color-mode-toggle:hover {
+            background: hsl(210 40% 98%);
+            border-color: hsl(220, 9%, 46%);
         }
-        .color-mode-buttons button.active:hover {
-            background-color: hsl(222.2 84% 4.9% / 0.9);
+
+        .dropdown-arrow {
+            font-size: 10px;
+            transition: transform 0.2s ease;
         }
-        
+
+        .color-mode-dropdown.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .color-mode-options {
+            position: fixed;
+            background: hsl(0 0% 100%);
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+            border-radius: 6px;
+            box-shadow: 0 4px 6px -1px hsl(220, 13%, 91%), 0 2px 4px -1px hsl(220, 13%, 91%);
+            min-width: 160px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 10000;
+        }
+
+        .color-mode-dropdown.open .color-mode-options {
+            max-height: 500px;
+            overflow-y: auto;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .color-mode-option {
+            padding: 10px 16px;
+            font-size: 12px;
+            cursor: pointer;
+            color: hsl(220, 9%, 46%);
+            transition: background 0.2s ease;
+            position: relative;
+        }
+
+        .color-mode-option:first-child {
+            border-radius: 6px 6px 0 0;
+        }
+
+        .color-mode-option:last-child {
+            border-radius: 0 0 6px 6px;
+        }
+
+        .color-mode-option:hover {
+            background: hsl(210 40% 98%);
+        }
+
+        .color-mode-option.active {
+            background: hsl(220, 9%, 46%);
+            color: hsl(210 40% 98%);
+            font-weight: 500;
+        }
+
+        .color-mode-option[data-mode="rainbow"] {
+            position: relative;
+            padding: 0;
+        }
+
+        .rainbow-main-label {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .color-mode-option[data-mode="rainbow"]:hover .rainbow-main-label {
+            background: hsl(210 40% 98%);
+        }
+
+        .color-mode-option[data-mode="rainbow"].active .rainbow-main-label {
+            background: hsl(220, 9%, 46%);
+            color: hsl(210 40% 98%);
+        }
+
+        .rainbow-palette-options {
+            padding: 4px 0;
+            display: none;
+            border-top: 1px solid hsl(214.3 31.8% 91.4%);
+            background: hsl(0 0% 100%);
+        }
+
+        .color-mode-option[data-mode="rainbow"]:hover .rainbow-palette-options,
+        .color-mode-option[data-mode="rainbow"].expanded .rainbow-palette-options {
+            display: block;
+        }
+
+        .palette-option {
+            padding: 8px 16px;
+            font-size: 11px;
+            cursor: pointer;
+            color: hsl(220, 9%, 46%);
+            transition: background 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .palette-option:hover {
+            background: hsl(214.3 31.8% 91.4%);
+        }
+
+        .palette-option.active {
+            background: hsl(220, 9%, 46%);
+            color: hsl(210 40% 98%);
+        }
+
+        /* Illustrative Style Switch */
+        .illustrative-style-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            color: hsl(220, 9%, 46%);
+        }
+
+        .illustrative-style-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        .illustrative-style-slider {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background-color: #ccc;
+            border-radius: 20px;
+            transition: .4s;
+        }
+
+        .illustrative-style-slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .4s;
+        }
+
+        .illustrative-style-switch input:checked + .illustrative-style-slider {
+            background-color: hsl(220, 9%, 46%);
+        }
+
+        .illustrative-style-switch input:checked + .illustrative-style-slider:before {
+            transform: translateX(20px);
+        }
+
         /* Color Palette */
         .custom-colors {
             margin-top: 10px;
@@ -1226,13 +1399,40 @@
             <!-- Color Controls -->
             <div class="color-controls">
                 <h3>Colors</h3>
-                <div class="color-mode-buttons">
-                    <button id="color-custom">Custom</button>
-                    <button id="color-by-element">Element</button>
-                    <button id="color-by-residue">Residue</button>
-                    <button id="color-by-chain">Chain</button>
+                <div class="color-controls-right">
+                        <!-- Color Mode Dropdown -->
+                        <div class="color-mode-dropdown">
+                            <button id="color-mode-button" class="color-mode-toggle">
+                                <span id="color-mode-label">Custom</span>
+                                <span class="dropdown-arrow">▼</span>
+                            </button>
+                            <div id="color-mode-options" class="color-mode-options">
+                                <div class="color-mode-option" data-mode="custom">Custom</div>
+                                <div class="color-mode-option" data-mode="element">Element</div>
+                                <div class="color-mode-option" data-mode="residue">Residue</div>
+                                <div class="color-mode-option" data-mode="chain">Chain</div>
+                                <div class="color-mode-option" data-mode="rainbow">
+                                    <div class="rainbow-main-label">Rainbow</div>
+                                    <div class="rainbow-palette-options">
+                                        <div class="palette-option" data-palette="rainbow">Classic</div>
+                                        <div class="palette-option" data-palette="viridis">Viridis</div>
+                                        <div class="palette-option" data-palette="plasma">Plasma</div>
+                                        <div class="palette-option" data-palette="magma">Magma</div>
+                                        <div class="palette-option" data-palette="blue-red">Blue-Red</div>
+                                        <div class="palette-option" data-palette="pastel">Pastel</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Illustrative Style Switch -->
+                        <label class="illustrative-style-switch" title="Toggle Illustrative Style">
+                            <input type="checkbox" id="illustrative-style-toggle">
+                            <span class="illustrative-style-slider"></span>
+                            <span class="illustrative-style-label">Illustrative</span>
+                        </label>
                 </div>
-                
+
                 <!-- Custom Color Palette -->
                 <div id="custom-colors" class="custom-colors">
                     <div class="color-palette">
@@ -2031,8 +2231,10 @@
         let animationSpeed = 1.0;
         let animationTimer = null;
         // View mode fixed to cartoon only
-        let currentColorMode = 'custom'; // 'custom', 'element', 'residue', 'chain'
+        let currentColorMode = 'custom'; // 'custom', 'element', 'residue', 'chain', 'rainbow'
         let currentCustomColor = '#4ECDC4'; // Default teal color
+        let currentRainbowPalette = 'rainbow'; // Current rainbow palette selection
+        let illustrativeStyleEnabled = false; // Illustrative style toggle
         let currentModels = []; // Store current 3DMol models
         let currentLayoutMode = 'single'; // 'single' or 'grid'
         let gridViewers = []; // Store grid viewers
@@ -2040,6 +2242,75 @@
         let activeGridViewers = new Set(); // Track which grid viewers are active
         let gridPreviewImages = []; // Store preview images for grid items
         let gridViewerOrder = []; // Track order of activation for LRU management
+
+        // Rainbow color palettes
+        const RAINBOW_PALETTES = {
+            'rainbow': ['#0000FF', '#00FFFF', '#00FF00', '#FFFF00', '#FF8000', '#FF0000'],
+            'viridis': ['#440154', '#482878', '#3e4989', '#31688e', '#26828e', '#1f9e89', '#35b779', '#6ece58', '#b5de2b', '#fde724'],
+            'plasma': ['#0d0887', '#46039f', '#7201a8', '#9c179e', '#bd3786', '#d8576b', '#ed7953', '#fb9f3a', '#fdca26', '#f0f921'],
+            'magma': ['#000004', '#1c1044', '#4f127b', '#812581', '#b5367a', '#e55964', '#fb8861', '#fec287', '#fcfdbf'],
+            'blue-red': ['#0000FF', '#FF0000'],
+            'pastel': ['#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#E0BBE4']
+        };
+
+        // Color interpolation helper functions
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+        }
+
+        function interpolateColor(color1, color2, factor) {
+            const c1 = hexToRgb(color1);
+            const c2 = hexToRgb(color2);
+            if (!c1 || !c2) return color1;
+
+            const r = Math.round(c1.r + factor * (c2.r - c1.r));
+            const g = Math.round(c1.g + factor * (c2.g - c1.g));
+            const b = Math.round(c1.b + factor * (c2.b - c1.b));
+            return rgbToHex(r, g, b);
+        }
+
+        function generateGradient(colors, steps) {
+            if (steps <= 0) return [];
+            if (steps === 1) return [colors[0]];
+            if (colors.length === 0) return [];
+            if (colors.length === 1) return Array(steps).fill(colors[0]);
+
+            const gradient = [];
+            const segmentCount = colors.length - 1;
+            const stepsPerSegment = (steps - 1) / segmentCount;
+
+            for (let i = 0; i < steps; i++) {
+                const position = i / (steps - 1) * segmentCount;
+                const segmentIndex = Math.floor(position);
+                const segmentPosition = position - segmentIndex;
+
+                if (segmentIndex >= segmentCount) {
+                    gradient.push(colors[colors.length - 1]);
+                } else {
+                    const color = interpolateColor(
+                        colors[segmentIndex],
+                        colors[segmentIndex + 1],
+                        segmentPosition
+                    );
+                    gradient.push(color);
+                }
+            }
+
+            return gradient;
+        }
+
+        function hexToMolstarColor(hex) {
+            return parseInt(hex.replace('#', ''), 16);
+        }
         
         // Sequence alignment variables
         let sequenceAlignmentEnabled = false;
@@ -2191,13 +2462,65 @@
             // Cartoon controls removed per requirements
             
             // Sphere controls removed - using cartoon mode only
-            
-            // Color controls
-            document.getElementById('color-custom').addEventListener('click', () => changeColorMode('custom'));
-            document.getElementById('color-by-element').addEventListener('click', () => changeColorMode('element'));
-            document.getElementById('color-by-residue').addEventListener('click', () => changeColorMode('residue'));
-            document.getElementById('color-by-chain').addEventListener('click', () => changeColorMode('chain'));
-            
+
+            // Color controls - Dropdown
+            const colorModeButton = document.getElementById('color-mode-button');
+            const colorModeDropdown = document.querySelector('.color-mode-dropdown');
+            const colorModeOptions = document.querySelectorAll('.color-mode-option');
+            const paletteOptions = document.querySelectorAll('.palette-option');
+
+            // Toggle dropdown
+            colorModeButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpening = !colorModeDropdown.classList.contains('open');
+                colorModeDropdown.classList.toggle('open');
+
+                // Position dropdown using fixed positioning
+                if (isOpening) {
+                    const rect = colorModeButton.getBoundingClientRect();
+                    const dropdown = document.getElementById('color-mode-options');
+                    dropdown.style.top = `${rect.bottom + 4}px`;
+                    dropdown.style.left = `${rect.left}px`;
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!colorModeDropdown.contains(e.target)) {
+                    colorModeDropdown.classList.remove('open');
+                }
+            });
+
+            // Handle color mode selection
+            colorModeOptions.forEach(option => {
+                option.addEventListener('click', (e) => {
+                    const mode = option.dataset.mode;
+                    if (mode !== 'rainbow') {
+                        e.stopPropagation();
+                        changeColorMode(mode);
+                        colorModeDropdown.classList.remove('open');
+                    }
+                    // Rainbow mode has sub-options, keep dropdown open
+                });
+            });
+
+            // Handle rainbow palette selection
+            paletteOptions.forEach(option => {
+                option.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const palette = option.dataset.palette;
+                    currentRainbowPalette = palette;
+                    changeColorMode('rainbow');
+                    colorModeDropdown.classList.remove('open');
+                });
+            });
+
+            // Illustrative style toggle
+            document.getElementById('illustrative-style-toggle').addEventListener('change', async (e) => {
+                illustrativeStyleEnabled = e.target.checked;
+                await applyIllustrativeStyle(illustrativeStyleEnabled);
+            });
+
             // Color palette
             document.querySelectorAll('.color-option').forEach(option => {
                 option.addEventListener('click', () => {
@@ -2699,7 +3022,11 @@
                     }
                     
                     // Apply current color theme after loading structure
-                    await updateColorTheme(getColorThemeName(), getColorThemeParams());
+                    if (currentColorMode === 'rainbow') {
+                        await applyRainbowColoring(viewer, currentRainbowPalette);
+                    } else {
+                        await updateColorTheme(getColorThemeName(), getColorThemeParams());
+                    }
                     
                     // Count atoms (approximate - Molstar doesn't easily expose atom count)
                     document.getElementById('atom-count').textContent = 'Loaded';
@@ -2810,16 +3137,32 @@
         // Refresh visualization based on current settings
         async function refreshVisualization() {
             if (!viewer || currentModels.length === 0) return;
-            
+
             console.log('Refreshing visualization - Color:', currentColorMode);
-            
-            // Update color theme efficiently (no view mode changes needed - cartoon only)
-            // But skip predicted structures that should maintain pLDDT coloring
-            await updateColorThemeSelective(getColorThemeName(), getColorThemeParams());
-            
-            // Also update all grid viewers if in grid mode
-            if (currentLayoutMode === 'grid') {
-                await updateAllGridViewersColor();
+
+            // Handle rainbow mode separately
+            if (currentColorMode === 'rainbow') {
+                // Apply rainbow coloring to main viewer
+                await applyRainbowColoring(viewer, currentRainbowPalette);
+
+                // Also update all grid viewers if in grid mode
+                if (currentLayoutMode === 'grid') {
+                    await applyRainbowColoringToAllGridViewers();
+                }
+
+                // Apply to dual session left viewer if active
+                if (currentSessionMode === 'dual' && leftViewer) {
+                    await applyRainbowColoring(leftViewer, currentRainbowPalette);
+                }
+            } else {
+                // Update color theme efficiently (no view mode changes needed - cartoon only)
+                // But skip predicted structures that should maintain pLDDT coloring
+                await updateColorThemeSelective(getColorThemeName(), getColorThemeParams());
+
+                // Also update all grid viewers if in grid mode
+                if (currentLayoutMode === 'grid') {
+                    await updateAllGridViewersColor();
+                }
             }
         }
         
@@ -2858,7 +3201,7 @@
             const singleBtn = document.getElementById('single-view');
             const gridBtn = document.getElementById('grid-view');
             const container = document.getElementById('container');
-            
+
             if (currentLayoutMode === 'single') {
                 singleBtn.classList.add('active');
                 gridBtn.classList.remove('active');
@@ -2869,7 +3212,284 @@
                 container.className = 'grid-view-mode';
             }
         }
-        
+
+        // Rainbow coloring implementation
+        async function applyRainbowColoring(targetViewer, paletteName = 'rainbow') {
+            if (!targetViewer || !targetViewer.plugin) {
+                console.warn('Target viewer is null, skipping rainbow coloring');
+                return;
+            }
+
+            try {
+                const plugin = targetViewer.plugin;
+                const structures = plugin.managers.structure.hierarchy.current.structures;
+
+                if (!structures || structures.length === 0) {
+                    console.warn('No structures found for rainbow coloring');
+                    return;
+                }
+
+                console.log(`Applying rainbow coloring with palette: ${paletteName}`);
+
+                // Create unique theme name for this instance
+                const themeName = `rainbow-sequence-${paletteName}-${Math.random().toString(36).substring(7)}`;
+
+                // Define the rainbow color theme provider
+                const RainbowSequenceColorThemeProvider = {
+                    name: themeName,
+                    label: `Rainbow (${paletteName})`,
+                    category: "Custom",
+                    factory: (ctx, props) => {
+                        // Get the structure from context
+                        const structure = ctx.structure;
+                        if (!structure || !structure.models || structure.models.length === 0) {
+                            console.warn('No structure models found');
+                            return {
+                                factory: RainbowSequenceColorThemeProvider.factory,
+                                granularity: 'group',
+                                color: () => 0x808080,
+                                props: props
+                            };
+                        }
+
+                        // Find min and max sequence IDs by iterating through residues
+                        let minSeqId = Infinity;
+                        let maxSeqId = -Infinity;
+
+                        // Iterate through all units and residues
+                        for (const unit of structure.units) {
+                            const { model } = unit;
+                            const { residues } = model.atomicHierarchy;
+
+                            // Iterate through residues in this unit
+                            for (let i = 0; i < residues._rowCount; i++) {
+                                const seqId = residues.label_seq_id.value(i);
+                                if (seqId > 0) {
+                                    minSeqId = Math.min(minSeqId, seqId);
+                                    maxSeqId = Math.max(maxSeqId, seqId);
+                                }
+                            }
+                        }
+
+                        // Handle case where no sequence IDs were found
+                        if (minSeqId === Infinity || maxSeqId === -Infinity) {
+                            console.warn('Could not determine sequence ID range');
+                            minSeqId = 1;
+                            maxSeqId = 100;
+                        }
+
+                        const totalResidues = maxSeqId - minSeqId + 1;
+                        console.log(`Sequence range: ${minSeqId} to ${maxSeqId} (${totalResidues} residues)`);
+
+                        // Generate gradient for the number of residues
+                        const paletteColors = RAINBOW_PALETTES[paletteName] || RAINBOW_PALETTES['rainbow'];
+                        const gradient = generateGradient(paletteColors, totalResidues);
+
+                        return {
+                            factory: RainbowSequenceColorThemeProvider.factory,
+                            granularity: 'group',
+                            color: (location) => {
+                                // Get sequence ID from location
+                                try {
+                                    const unit = location.unit;
+                                    const element = location.element;
+
+                                    // Get residue from element
+                                    const residueIndex = unit.model.atomicHierarchy.residueAtomSegments.index[element];
+                                    const seqId = unit.model.atomicHierarchy.residues.label_seq_id.value(residueIndex);
+
+                                    // Map sequence ID to color index
+                                    const colorIndex = Math.max(0, Math.min(totalResidues - 1, seqId - minSeqId));
+                                    const hexColor = gradient[colorIndex];
+
+                                    return hexToMolstarColor(hexColor);
+                                } catch (error) {
+                                    // Fallback to gray if error
+                                    return 0x808080;
+                                }
+                            },
+                            props: props,
+                            description: `Rainbow coloring by sequence position (${paletteName})`
+                        };
+                    },
+                    getParams: () => ({}),
+                    defaultValues: {},
+                    isApplicable: (ctx) => !!ctx.structure
+                };
+
+                // Register the color theme
+                plugin.representation.structure.themes.colorThemeRegistry.add(RainbowSequenceColorThemeProvider);
+                console.log(`Registered rainbow theme: ${themeName}`);
+
+                // Apply the theme to all structures
+                for (const structure of structures) {
+                    // Skip predicted structures (they should keep pLDDT coloring)
+                    const structureId = structure.cell.transform.ref;
+                    if (predictedStructureIds.has(structureId)) {
+                        console.log('Skipping rainbow coloring for predicted structure:', structureId);
+                        continue;
+                    }
+
+                    if (structure.components && structure.components.length > 0) {
+                        await plugin.managers.structure.component.updateRepresentationsTheme(
+                            structure.components,
+                            { color: themeName }
+                        );
+                    }
+                }
+
+                console.log('Successfully applied rainbow coloring');
+
+            } catch (error) {
+                console.error('Error applying rainbow coloring:', error);
+            }
+        }
+
+        // Apply rainbow coloring to all active grid viewers
+        async function applyRainbowColoringToAllGridViewers() {
+            for (let i = 0; i < gridViewers.length; i++) {
+                if (gridViewers[i] && activeGridViewers.has(i)) {
+                    try {
+                        await applyRainbowColoring(gridViewers[i], currentRainbowPalette);
+                    } catch (error) {
+                        console.error(`Error applying rainbow coloring to grid viewer ${i}:`, error);
+                    }
+                }
+            }
+        }
+
+        // Illustrative style management
+        async function applyIllustrativeStyle(enabled) {
+            if (!viewer || !viewer.plugin) return;
+
+            try {
+                const plugin = viewer.plugin;
+
+                // Set ignoreLight option for all structures
+                await plugin.managers.structure.component.setOptions({
+                    ...plugin.managers.structure.component.state.options,
+                    ignoreLight: enabled
+                });
+
+                // Apply canvas3d postprocessing effects
+                if (plugin.canvas3d) {
+                    if (enabled) {
+                        // Apply illustrative style with outline and occlusion
+                        const pp = plugin.canvas3d.props.postprocessing;
+                        plugin.canvas3d.setProps({
+                            postprocessing: {
+                                outline: {
+                                    name: 'on',
+                                    params: pp.outline.name === 'on' ? pp.outline.params : {
+                                        scale: 1,
+                                        threshold: 0.33,
+                                        includeTransparent: true
+                                    }
+                                },
+                                occlusion: {
+                                    name: 'on',
+                                    params: pp.occlusion.name === 'on' ? pp.occlusion.params : {
+                                        multiScale: { name: 'off', params: {} },
+                                        radius: 5,
+                                        bias: 0.8,
+                                        blurKernelSize: 15,
+                                        samples: 32,
+                                        resolutionScale: 1
+                                    }
+                                },
+                                shadow: { name: 'off', params: {} }
+                            }
+                        });
+                    } else {
+                        // Reset to default style
+                        plugin.canvas3d.setProps({
+                            postprocessing: {
+                                outline: { name: 'off', params: {} },
+                                occlusion: { name: 'off', params: {} },
+                                shadow: { name: 'off', params: {} }
+                            }
+                        });
+                    }
+                }
+
+                // Also apply to dual session viewers if active
+                if (currentSessionMode === 'dual') {
+                    if (leftViewer) await applyIllustrativeStyleToViewer(leftViewer, enabled);
+                    if (rightViewer) await applyIllustrativeStyleToViewer(rightViewer, enabled);
+                }
+
+                // Apply to all grid viewers
+                if (currentLayoutMode === 'grid') {
+                    for (let i = 0; i < gridViewers.length; i++) {
+                        if (gridViewers[i] && activeGridViewers.has(i)) {
+                            await applyIllustrativeStyleToViewer(gridViewers[i], enabled);
+                        }
+                    }
+                }
+
+                console.log(`Illustrative style ${enabled ? 'enabled' : 'disabled'}`);
+            } catch (error) {
+                console.error('Error applying illustrative style:', error);
+            }
+        }
+
+        async function applyIllustrativeStyleToViewer(targetViewer, enabled) {
+            if (!targetViewer || !targetViewer.plugin) return;
+
+            try {
+                const plugin = targetViewer.plugin;
+
+                // Set ignoreLight option for all structures
+                await plugin.managers.structure.component.setOptions({
+                    ...plugin.managers.structure.component.state.options,
+                    ignoreLight: enabled
+                });
+
+                // Apply canvas3d postprocessing effects
+                if (plugin.canvas3d) {
+                    if (enabled) {
+                        // Apply illustrative style with outline and occlusion
+                        const pp = plugin.canvas3d.props.postprocessing;
+                        plugin.canvas3d.setProps({
+                            postprocessing: {
+                                outline: {
+                                    name: 'on',
+                                    params: pp.outline.name === 'on' ? pp.outline.params : {
+                                        scale: 1,
+                                        threshold: 0.33,
+                                        includeTransparent: true
+                                    }
+                                },
+                                occlusion: {
+                                    name: 'on',
+                                    params: pp.occlusion.name === 'on' ? pp.occlusion.params : {
+                                        multiScale: { name: 'off', params: {} },
+                                        radius: 5,
+                                        bias: 0.8,
+                                        blurKernelSize: 15,
+                                        samples: 32,
+                                        resolutionScale: 1
+                                    }
+                                },
+                                shadow: { name: 'off', params: {} }
+                            }
+                        });
+                    } else {
+                        // Reset to default style
+                        plugin.canvas3d.setProps({
+                            postprocessing: {
+                                outline: { name: 'off', params: {} },
+                                occlusion: { name: 'off', params: {} },
+                                shadow: { name: 'off', params: {} }
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error applying illustrative style to viewer:', error);
+            }
+        }
+
         // Color mode management
         async function changeColorMode(mode) {
             currentColorMode = mode;
@@ -2878,12 +3498,39 @@
         }
         
         function updateColorModeUI() {
-            const buttons = document.querySelectorAll('.color-mode-buttons button');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            
-            const activeBtn = document.getElementById(`color-${currentColorMode === 'custom' ? 'custom' : 'by-' + currentColorMode}`);
-            if (activeBtn) activeBtn.classList.add('active');
-            
+            // Update dropdown label
+            const colorModeLabel = document.getElementById('color-mode-label');
+            const modeNames = {
+                'custom': 'Custom',
+                'element': 'Element',
+                'residue': 'Residue',
+                'chain': 'Chain',
+                'rainbow': `Rainbow (${currentRainbowPalette})`
+            };
+            colorModeLabel.textContent = modeNames[currentColorMode] || 'Custom';
+
+            // Update active state in dropdown options
+            document.querySelectorAll('.color-mode-option').forEach(option => {
+                option.classList.remove('active');
+                if (option.dataset.mode === currentColorMode) {
+                    option.classList.add('active');
+                }
+            });
+
+            // Update active palette option - clear all first, then set if in rainbow mode
+            document.querySelectorAll('.palette-option').forEach(option => {
+                option.classList.remove('active');
+            });
+
+            if (currentColorMode === 'rainbow') {
+                document.querySelectorAll('.palette-option').forEach(option => {
+                    if (option.dataset.palette === currentRainbowPalette) {
+                        option.classList.add('active');
+                    }
+                });
+            }
+
+            // Show/hide custom color palette
             const customColors = document.getElementById('custom-colors');
             customColors.style.display = currentColorMode === 'custom' ? 'block' : 'none';
         }
@@ -3036,11 +3683,16 @@
         // Generate preview image for a file
         async function generatePreviewImage(file, index) {
             const { viewer: offscreenViewer, container: offscreenDiv } = await createOffscreenViewer();
-            
+
             try {
                 // Load structure
                 await loadStructureIntoGridViewer(offscreenViewer, file);
-                
+
+                // Apply current illustrative style if enabled
+                if (illustrativeStyleEnabled) {
+                    await applyIllustrativeStyleToViewer(offscreenViewer, true);
+                }
+
                 // Wait for rendering
                 await new Promise(resolve => setTimeout(resolve, 500));
                 
@@ -3319,11 +3971,17 @@
                 console.warn('Target viewer is null, skipping color theme application');
                 return;
             }
-            
+
             try {
+                // Handle rainbow mode separately
+                if (currentColorMode === 'rainbow') {
+                    await applyRainbowColoring(targetViewer, currentRainbowPalette);
+                    return;
+                }
+
                 const plugin = targetViewer.plugin;
                 const structures = plugin.managers.structure.hierarchy.current.structures;
-                
+
                 for (const structure of structures) {
                     for (const component of structure.components) {
                         if (component.representations) {
@@ -3440,7 +4098,12 @@
                 
                 // Load structure into the viewer
                 await loadStructureIntoGridViewer(gridViewer, loadedFiles[fileIndex]);
-                
+
+                // Apply current illustrative style to the newly created viewer
+                if (illustrativeStyleEnabled) {
+                    await applyIllustrativeStyleToViewer(gridViewer, true);
+                }
+
                 // Add the expand button
                 const expandButton = document.createElement('div');
                 expandButton.className = 'grid-expand-button';
@@ -3595,7 +4258,12 @@
                         }
                         
                         await parseStructureFile(file.data, file.format, false);
-                        
+
+                        // Apply current illustrative style if enabled
+                        if (illustrativeStyleEnabled) {
+                            await applyIllustrativeStyle(true);
+                        }
+
                         // Force viewer refresh and resize
                         setTimeout(() => {
                             if (viewer && viewer.plugin) {
@@ -3603,18 +4271,18 @@
                                     // Check if canvas exists
                                     const canvas = viewerContainer.querySelector('canvas');
                                     console.log('Canvas found:', !!canvas);
-                                    
+
                                     if (canvas) {
                                         canvas.style.display = 'block';
                                         canvas.style.visibility = 'visible';
                                     }
-                                    
+
                                     // Trigger window resize event to ensure proper rendering
                                     window.dispatchEvent(new Event('resize'));
-                                    
+
                                     viewer.handleResize();
                                     viewer.plugin.managers.camera.reset();
-                                    
+
                                     console.log('Viewer refreshed and camera reset');
                                 } catch (refreshError) {
                                     console.error('Error refreshing viewer:', refreshError);

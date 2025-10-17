@@ -2,7 +2,7 @@
   "name": "nano-protein-viewer",
   "displayName": "Nano Protein Viewer",
   "description": "Lightweight protein structure viewer that supports grid view of multiple structures and more",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publisher": "StevenYu",
   "author": {
     "name": "Steven Yu"

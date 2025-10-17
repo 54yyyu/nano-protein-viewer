@@ -6,6 +6,15 @@ A simple but powerful VSCode extension for visualizing protein structures using 
 
 ## Features
 
+### Single view mode
+![img](media/single-view-demo.jpg)
+
+### Grid view mode
+![img](media/grid-view-demo.jpg)
+
+### Usage demo
+![gif](media/demo.gif)
+
 ### 🧬 Protein Structure Visualization
 - **Multi-Format Support**: Load and visualize molecular structures from PDB, mmCIF, PDBQT, GRO, XYZ, MOL, MOL2, and SDF files
 - **Interactive 3D Viewer**: Powered by Molstar for high-performance molecular visualization
@@ -89,11 +98,25 @@ When loading diffusion sequences:
 - **Element**: Color by chemical element
 - **Residue**: Color by amino acid residue type
 - **Chain**: Color by protein chain
+- **Rainbow**: Color by sequence position with multiple palette options
+  - Classic: Traditional rainbow gradient
+  - Viridis: Perceptually uniform colormap
+  - Plasma: High contrast plasma colormap
+  - Magma: Warm magma colormap
+  - Blue-Red: Simple blue to red gradient
+  - Pastel: Soft pastel colors
 - **pLDDT Confidence**: Automatic for predicted structures
   - Blue: Very High confidence (>90)
   - Light Blue: Confident (70-90)
   - Yellow: Low confidence (50-70)
   - Orange: Very Low confidence (<50)
+
+### Illustrative Style
+
+Toggle illustrative rendering for enhanced visual quality:
+- **Outline Effect**: Adds edge outlines to structures for better definition
+- **Ambient Occlusion**: Adds depth perception with shadowing in cavities
+- Creates publication-quality visualizations with improved depth and clarity
 
 ## Requirements
 
@@ -180,6 +203,21 @@ If you use this extension in your research, please cite the underlying Mol* fram
 - **VSCode Team**: For the excellent extension API
 
 ## Version History
+
+### 1.0.4
+- Added **Rainbow Coloring Mode** with 6 different color palettes
+  - Classic rainbow gradient
+  - Viridis (perceptually uniform)
+  - Plasma (high contrast)
+  - Magma (warm tones)
+  - Blue-Red (simple gradient)
+  - Pastel (soft colors)
+- Added **Illustrative Style Rendering**
+  - Outline effect for better structure definition
+  - Ambient occlusion for enhanced depth perception
+  - Publication-quality visualization option
+- Improved color mode UI with dropdown menu
+- Enhanced visual customization options
 
 ### 1.0.3
 - Added support for additional file formats: PDBQT, GRO, XYZ, MOL, MOL2, SDF
