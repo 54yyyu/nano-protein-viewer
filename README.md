@@ -206,6 +206,48 @@ If you use this extension in your research, please cite the underlying Mol* fram
 
 ## Version History
 
+### 1.1.0
+- Added **Water Molecule Visibility Control**
+  - Toggle water molecules on/off with dedicated switch
+  - Auto-detects water components in structures
+  - Improved water handling when toggling surface representation
+- Added **Spin Animation Control**
+  - Toggle continuous spin animation on structures
+  - Adjustable spin speed with slider and input controls (0.01-1.0)
+- Added **pLDDT Confidence Coloring** 
+  - New color mode for AlphaFold/ESMFold predictions
+  - Automatic B-factor detection and normalization
+  - Color-coded confidence levels:
+    - Dark Blue: Very High confidence (>90)
+    - Light Blue: Confident (70-90)
+    - Yellow: Low confidence (50-70)
+    - Orange: Very Low confidence (<50)
+  - Works with both main viewer and grid/dual viewers
+  - Surface inherits pLDDT colors when enabled
+  - Fixed pLDDT surface color inheritance on first toggle
+- Fixed water surface rendering bug (surface no longer applies to hidden water)
+- Enhanced surface representation with pLDDT theme support
+- Improved color theme management across all visualization modes
+
+### 1.0.5
+- Added **Delete Functionality**
+  - Delete individual files with confirmation dialog
+  - Bulk delete all files option
+  - Custom positioned confirmation dialogs
+- Added **Surface/Bubble Visualization**
+  - Toggle Gaussian surface overlay on structures
+  - Customizable opacity (0-100%)
+  - Color inheritance from current theme or custom color
+- Added **Secondary Structure Coloring Mode**
+  - Customize colors for alpha helix, beta sheet, and coil
+  - Real-time color updates with debouncing
+- Added **Chain Color Customization**
+  - Auto-detect chains in loaded structures
+  - Assign custom colors per chain
+  - Visual chain color picker interface
+- Enhanced color mode support with surface integration
+- Improved structure switching (maintains surface state)
+
 ### 1.0.4
 - Added **Rainbow Coloring Mode** with 6 different color palettes
   - Classic rainbow gradient
