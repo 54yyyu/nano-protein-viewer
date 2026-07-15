@@ -35,6 +35,12 @@ A simple but powerful VSCode extension for visualizing protein structures using 
 - **pLDDT Confidence Coloring**: Visualize prediction confidence with color coding
 - **Alignment Tools**: Manual alignment mode with RMSD calculation
 
+### 🔬 Structure Alignment
+- **Superpose Any Two Structures**: Load two (or more) structures and overlay them in one 3D view
+- **Reference + Mobile Workflow**: Choose a fixed reference and align one or more mobile structures onto it
+- **Sequence-Guided Superposition**: Automatic residue correspondence via Needleman–Wunsch with iterative outlier rejection
+- **Quantitative Metrics**: Core RMSD, aligned-residue count, and sequence identity, with a per-structure color legend
+
 ### 🎨 Advanced Visualization
 - **Cartoon Representation**: Optimized cartoon rendering for clear structural visualization
 - **Confidence Coloring**: pLDDT confidence scores with color legend
@@ -205,6 +211,23 @@ If you use this extension in your research, please cite the underlying Mol* fram
 - **VSCode Team**: For the excellent extension API
 
 ## Version History
+
+### 1.2.0
+- Added **Structure Alignment**
+  - Superpose any two (or more) loaded structures in a single 3D view
+  - Pick a **reference** structure (stays fixed) and one or more **mobile** structures to align onto it
+  - Sequence-guided superposition (Needleman–Wunsch) with iterative outlier rejection
+  - Reports **core RMSD**, number of aligned residues, and sequence identity
+  - Distinct color per structure with an on-screen legend
+  - Runs entirely in the viewer — no external services or new dependencies
+
+### 1.1.1
+- Added **Custom Color Picker**
+  - Native HTML5 color picker for selecting any custom color
+- Enhanced **Grid Viewer Water Visibility**
+  - Water visibility now syncs across all active grid viewers
+  - Water is automatically hidden in new grid viewers if toggle is off
+- Enabled **Selection Tool** in single view layout for further customization of color settings by chains
 
 ### 1.1.0
 - Added **Water Molecule Visibility Control**
