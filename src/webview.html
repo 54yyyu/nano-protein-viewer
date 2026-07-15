@@ -1407,9 +1407,178 @@
             border-color: hsl(222.2 84% 4.9%);
             border-width: 3px;
         }
+
+        .custom-color-picker-option {
+            position: relative;
+            overflow: hidden;
+            padding: 0;
+            border: 2px solid #ccc;
+        }
+        .custom-color-picker-option:hover {
+            border-color: #666;
+        }
+        .custom-color-picker-option.active {
+            border-color: hsl(222.2 84% 4.9%);
+            border-width: 3px;
+        }
+        #custom-color-picker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
         
         /* Cartoon Controls removed per requirements */
         
+        /* Structure Alignment Controls */
+        .struct-align-controls {
+            margin: 15px 0;
+            padding: 15px 0;
+            border-top: 1px solid #ddd;
+        }
+        .struct-align-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .struct-align-header h3 { margin: 0; }
+        .struct-align-content {
+            display: none;
+            margin-top: 12px;
+        }
+        .struct-align-content.active { display: block; }
+        .struct-align-hint {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.4;
+            margin: 0 0 12px 0;
+        }
+        .struct-align-notice {
+            font-size: 12px;
+            color: #8a6d3b;
+            background: #fcf8e3;
+            border: 1px solid #faebcc;
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+        .struct-align-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: hsl(220, 9%, 40%);
+            margin-bottom: 6px;
+        }
+        .struct-align-sub { font-weight: 400; color: #999; font-size: 11px; }
+        .struct-align-select {
+            width: 100%;
+            padding: 7px 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 12px;
+            background: #fff;
+            cursor: pointer;
+        }
+        .align-mobile-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 140px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 6px;
+        }
+        .align-mobile-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .align-mobile-item:hover { background: #f5f5f5; }
+        .align-mobile-item input { cursor: pointer; margin: 0; }
+        .align-mobile-swatch {
+            width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+        }
+        .align-mobile-name {
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .struct-align-run {
+            width: 100%;
+            margin-top: 12px;
+            padding: 10px;
+            background: hsl(210, 80%, 52%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .struct-align-run:hover { background: hsl(210, 80%, 46%); }
+        .struct-align-run:disabled { background: #ccc; cursor: not-allowed; }
+        .align-results {
+            margin-top: 14px;
+            padding: 12px;
+            background: hsl(210, 40%, 98%);
+            border: 1px solid hsl(210, 30%, 90%);
+            border-radius: 8px;
+        }
+        .align-results-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .align-metric {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+        }
+        .align-metric-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: hsl(210, 70%, 45%);
+            line-height: 1.1;
+        }
+        .align-metric-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-top: 2px;
+        }
+        .align-legend { margin: 8px 0; }
+        .align-legend-item {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 11px; color: #555; margin-bottom: 3px;
+        }
+        .align-legend-swatch { width: 14px; height: 14px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+        .align-pair-row {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 11px; padding: 3px 0; border-top: 1px dashed #e5e5e5;
+        }
+        .align-reset-btn {
+            width: 100%; margin-top: 8px; padding: 7px;
+            background: #fff; color: #666; border: 1px solid #ddd;
+            border-radius: 6px; font-size: 12px; cursor: pointer;
+        }
+        .align-reset-btn:hover { background: #f5f5f5; }
+        .align-error {
+            font-size: 12px; color: #a94442; background: #f2dede;
+            border: 1px solid #ebccd1; border-radius: 6px; padding: 8px 10px;
+        }
+
         /* Sequence Alignment Controls */
         .seq-alignment-controls {
             margin: 15px 0;
@@ -1965,8 +2134,10 @@
                         <div class="color-option" data-color="#FF922B" style="background-color: #FF922B;" title="Orange"></div>
                         <div class="color-option" data-color="#DA77F2" style="background-color: #DA77F2;" title="Purple"></div>
                         <div class="color-option" data-color="#FF8CC8" style="background-color: #FF8CC8;" title="Pink"></div>
-                        <div class="color-option" data-color="#15AABF" style="background-color: #15AABF;" title="Cyan"></div>
                         <div class="color-option" data-color="#868E96" style="background-color: #868E96;" title="Gray"></div>
+                        <div class="color-option custom-color-picker-option" title="Custom Color">
+                            <input type="color" id="custom-color-picker" value="#4ECDC4" style="width: 100%; height: 100%; border: none; cursor: pointer;">
+                        </div>
                     </div>
                 </div>
 
@@ -2061,6 +2232,36 @@
                 </div>
             </div>
             
+            <!-- Structure Alignment Controls -->
+            <div class="struct-align-controls">
+                <div class="struct-align-header">
+                    <h3>Align Structures</h3>
+                    <label class="seq-alignment-switch" title="Superpose two loaded structures">
+                        <input type="checkbox" id="struct-align-toggle">
+                        <span class="seq-alignment-slider"></span>
+                    </label>
+                </div>
+                <div id="struct-align-content" class="struct-align-content">
+                    <p class="struct-align-hint">Superpose two loaded structures in one 3D view. Alignment is sequence-guided with iterative outlier rejection.</p>
+
+                    <div id="struct-align-need-files" class="struct-align-notice">
+                        Load at least <strong>two</strong> structures to enable alignment.
+                    </div>
+
+                    <div id="struct-align-picker" style="display:none;">
+                        <label class="struct-align-label">Reference <span class="struct-align-sub">(stays fixed)</span></label>
+                        <select id="align-ref-select" class="struct-align-select"></select>
+
+                        <label class="struct-align-label" style="margin-top:12px;">Mobile <span class="struct-align-sub">(moved onto reference)</span></label>
+                        <div id="align-mobile-list" class="align-mobile-list"></div>
+
+                        <button id="run-align-btn" class="struct-align-run">Align</button>
+                    </div>
+
+                    <div id="align-results" class="align-results" style="display:none;"></div>
+                </div>
+            </div>
+
             <!-- Sequence Alignment Controls -->
             <div class="seq-alignment-controls">
                 <div class="seq-alignment-header">
@@ -2873,6 +3074,7 @@
         let detectedChains = []; // List of detected chain IDs in current structure
         let chainColorUpdateTimeout = null; // Debounce timer for chain color updates
         let secondaryColorUpdateTimeout = null; // Debounce timer for secondary structure color updates
+        let lastCustomPickedColor = '#4ECDC4'; // Track the last color picked from the custom color picker
 
         // Default chain colors (to cycle through when chains are detected)
         const DEFAULT_CHAIN_COLORS = [
@@ -2961,7 +3163,231 @@
         function hexToMolstarColor(hex) {
             return parseInt(hex.replace('#', ''), 16);
         }
-        
+
+        // ====================================================================
+        //  Structural superposition core (self-contained, no dependencies)
+        //  parseCAAtoms → needlemanWunsch → kabschHorn → alignStructures
+        // ====================================================================
+        const ALIGN_THREE_TO_ONE = {
+            ALA:'A',ARG:'R',ASN:'N',ASP:'D',CYS:'C',GLN:'Q',GLU:'E',GLY:'G',HIS:'H',
+            ILE:'I',LEU:'L',LYS:'K',MET:'M',PHE:'F',PRO:'P',SER:'S',THR:'T',TRP:'W',
+            TYR:'Y',VAL:'V',MSE:'M',SEC:'U',PYL:'O'
+        };
+
+        function parseCAAtoms(pdbText) {
+            const out = [];
+            const lines = pdbText.split('\n');
+            for (const line of lines) {
+                if (line.startsWith('ENDMDL')) break;
+                if (!line.startsWith('ATOM') && !line.startsWith('HETATM')) continue;
+                if (line.substring(12, 16).trim() !== 'CA') continue;
+                const altLoc = line.substring(16, 17).trim();
+                if (altLoc && altLoc !== 'A') continue;
+                const resName = line.substring(17, 20).trim();
+                const one = ALIGN_THREE_TO_ONE[resName] || 'X';
+                const chain = line.substring(21, 22).trim() || ' ';
+                const resSeq = parseInt(line.substring(22, 26).trim(), 10);
+                const x = parseFloat(line.substring(30, 38));
+                const y = parseFloat(line.substring(38, 46));
+                const z = parseFloat(line.substring(46, 54));
+                if (isNaN(x) || isNaN(y) || isNaN(z)) continue;
+                out.push({ chain, resSeq, resName, one, x, y, z });
+            }
+            return out;
+        }
+
+        function needlemanWunsch(seqA, seqB, opts) {
+            opts = opts || {};
+            const match = opts.match != null ? opts.match : 1;
+            const mismatch = opts.mismatch != null ? opts.mismatch : -1;
+            const gap = opts.gap != null ? opts.gap : -1;
+            const n = seqA.length, m = seqB.length;
+            const score = new Float64Array((n + 1) * (m + 1));
+            const tb = new Int8Array((n + 1) * (m + 1));
+            const W = m + 1;
+            for (let i = 0; i <= n; i++) { score[i * W] = i * gap; tb[i * W] = 1; }
+            for (let j = 0; j <= m; j++) { score[j] = j * gap; tb[j] = 2; }
+            tb[0] = 0;
+            for (let i = 1; i <= n; i++) {
+                for (let j = 1; j <= m; j++) {
+                    const s = (seqA[i - 1] === seqB[j - 1] && seqA[i - 1] !== 'X') ? match : mismatch;
+                    const diag = score[(i - 1) * W + (j - 1)] + s;
+                    const up = score[(i - 1) * W + j] + gap;
+                    const left = score[i * W + (j - 1)] + gap;
+                    let best = diag, dir = 0;
+                    if (up > best) { best = up; dir = 1; }
+                    if (left > best) { best = left; dir = 2; }
+                    score[i * W + j] = best;
+                    tb[i * W + j] = dir;
+                }
+            }
+            const pairs = [];
+            let i = n, j = m;
+            while (i > 0 || j > 0) {
+                const dir = tb[i * W + j];
+                if (dir === 0) { pairs.push([i - 1, j - 1]); i--; j--; }
+                else if (dir === 1) { i--; }
+                else { j--; }
+            }
+            pairs.reverse();
+            return pairs;
+        }
+
+        function largestEigenvector4(N) {
+            const a = [N[0].slice(), N[1].slice(), N[2].slice(), N[3].slice()];
+            const v = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+            for (let sweep = 0; sweep < 100; sweep++) {
+                let off = 0;
+                for (let p = 0; p < 4; p++) for (let q = p + 1; q < 4; q++) off += a[p][q] * a[p][q];
+                if (off < 1e-20) break;
+                for (let p = 0; p < 4; p++) {
+                    for (let q = p + 1; q < 4; q++) {
+                        if (Math.abs(a[p][q]) < 1e-18) continue;
+                        const theta = (a[q][q] - a[p][p]) / (2 * a[p][q]);
+                        const t = Math.sign(theta || 1) / (Math.abs(theta) + Math.sqrt(theta * theta + 1));
+                        const c = 1 / Math.sqrt(t * t + 1);
+                        const s = t * c;
+                        for (let k = 0; k < 4; k++) { const akp=a[k][p], akq=a[k][q]; a[k][p]=c*akp-s*akq; a[k][q]=s*akp+c*akq; }
+                        for (let k = 0; k < 4; k++) { const apk=a[p][k], aqk=a[q][k]; a[p][k]=c*apk-s*aqk; a[q][k]=s*apk+c*aqk; }
+                        for (let k = 0; k < 4; k++) { const vkp=v[k][p], vkq=v[k][q]; v[k][p]=c*vkp-s*vkq; v[k][q]=s*vkp+c*vkq; }
+                    }
+                }
+            }
+            let best = 0;
+            for (let k = 1; k < 4; k++) if (a[k][k] > a[best][best]) best = k;
+            return [v[0][best], v[1][best], v[2][best], v[3][best]];
+        }
+
+        function kabschHorn(P, Q) {
+            const n = P.length;
+            if (n === 0) return null;
+            let pc = [0,0,0], qc = [0,0,0];
+            for (let i = 0; i < n; i++) {
+                pc[0]+=P[i].x; pc[1]+=P[i].y; pc[2]+=P[i].z;
+                qc[0]+=Q[i].x; qc[1]+=Q[i].y; qc[2]+=Q[i].z;
+            }
+            pc = pc.map(v => v / n); qc = qc.map(v => v / n);
+            let Sxx=0,Sxy=0,Sxz=0,Syx=0,Syy=0,Syz=0,Szx=0,Szy=0,Szz=0;
+            for (let i = 0; i < n; i++) {
+                const px=P[i].x-pc[0], py=P[i].y-pc[1], pz=P[i].z-pc[2];
+                const qx=Q[i].x-qc[0], qy=Q[i].y-qc[1], qz=Q[i].z-qc[2];
+                Sxx+=px*qx; Sxy+=px*qy; Sxz+=px*qz;
+                Syx+=py*qx; Syy+=py*qy; Syz+=py*qz;
+                Szx+=pz*qx; Szy+=pz*qy; Szz+=pz*qz;
+            }
+            const N = [
+                [Sxx+Syy+Szz, Syz-Szy,      Szx-Sxz,      Sxy-Syx     ],
+                [Syz-Szy,     Sxx-Syy-Szz,  Sxy+Syx,      Szx+Sxz     ],
+                [Szx-Sxz,     Sxy+Syx,     -Sxx+Syy-Szz,  Syz+Szy     ],
+                [Sxy-Syx,     Szx+Sxz,      Syz+Szy,     -Sxx-Syy+Szz ]
+            ];
+            let [w,x,y,z] = largestEigenvector4(N);
+            const norm = Math.hypot(w,x,y,z) || 1;
+            w/=norm; x/=norm; y/=norm; z/=norm;
+            const R = [
+                1-2*(y*y+z*z), 2*(x*y-w*z),   2*(x*z+w*y),
+                2*(x*y+w*z),   1-2*(x*x+z*z), 2*(y*z-w*x),
+                2*(x*z-w*y),   2*(y*z+w*x),   1-2*(x*x+y*y)
+            ];
+            const t = [
+                qc[0]-(R[0]*pc[0]+R[1]*pc[1]+R[2]*pc[2]),
+                qc[1]-(R[3]*pc[0]+R[4]*pc[1]+R[5]*pc[2]),
+                qc[2]-(R[6]*pc[0]+R[7]*pc[1]+R[8]*pc[2])
+            ];
+            let sum = 0;
+            for (let i = 0; i < n; i++) {
+                const tx=R[0]*P[i].x+R[1]*P[i].y+R[2]*P[i].z+t[0];
+                const ty=R[3]*P[i].x+R[4]*P[i].y+R[5]*P[i].z+t[1];
+                const tz=R[6]*P[i].x+R[7]*P[i].y+R[8]*P[i].z+t[2];
+                sum += (tx-Q[i].x)**2+(ty-Q[i].y)**2+(tz-Q[i].z)**2;
+            }
+            return { R, t, rmsd: Math.sqrt(sum / n) };
+        }
+
+        function alignApplyR(R, t, p) {
+            return {
+                x: R[0]*p.x+R[1]*p.y+R[2]*p.z+t[0],
+                y: R[3]*p.x+R[4]*p.y+R[5]*p.z+t[1],
+                z: R[6]*p.x+R[7]*p.y+R[8]*p.z+t[2]
+            };
+        }
+
+        // Align mobile onto reference via sequence-guided iterative superposition.
+        function alignStructures(mobilePdb, refPdb, opts) {
+            opts = opts || {};
+            const pruneCutoff = opts.pruneCutoff != null ? opts.pruneCutoff : 5.0;
+            const maxIter = opts.maxIter != null ? opts.maxIter : 5;
+            const caM = parseCAAtoms(mobilePdb);
+            const caR = parseCAAtoms(refPdb);
+            if (caM.length < 3 || caR.length < 3) {
+                return { error: 'Not enough Cα atoms to align (need ≥3 each).', nMobileCA: caM.length, nRefCA: caR.length };
+            }
+            const seqM = caM.map(a => a.one).join('');
+            const seqR = caR.map(a => a.one).join('');
+            const pairs = needlemanWunsch(seqM, seqR);
+            if (pairs.length < 3) return { error: 'Sequence alignment produced too few matched residues.' };
+            let identical = 0;
+            for (const [i, j] of pairs) if (caM[i].one === caR[j].one && caM[i].one !== 'X') identical++;
+            const seqIdentity = identical / pairs.length;
+
+            let P = pairs.map(([i]) => caM[i]);
+            let Q = pairs.map(([, j]) => caR[j]);
+            let fit = kabschHorn(P, Q);
+            const rawRmsd = fit.rmsd;
+
+            let active = pairs.slice();
+            for (let iter = 0; iter < maxIter; iter++) {
+                const kept = [];
+                for (const [i, j] of active) {
+                    const tp = alignApplyR(fit.R, fit.t, caM[i]);
+                    const d = Math.hypot(tp.x-caR[j].x, tp.y-caR[j].y, tp.z-caR[j].z);
+                    if (d <= pruneCutoff) kept.push([i, j]);
+                }
+                if (kept.length < 3) break;
+                if (kept.length === active.length) { active = kept; break; }
+                active = kept;
+                P = active.map(([i]) => caM[i]);
+                Q = active.map(([, j]) => caR[j]);
+                fit = kabschHorn(P, Q);
+            }
+
+            let nWithinCutoff = 0;
+            for (const [i, j] of pairs) {
+                const tp = alignApplyR(fit.R, fit.t, caM[i]);
+                if (Math.hypot(tp.x-caR[j].x, tp.y-caR[j].y, tp.z-caR[j].z) <= pruneCutoff) nWithinCutoff++;
+            }
+
+            return {
+                R: fit.R, t: fit.t,
+                rmsd: fit.rmsd, rawRmsd,
+                nAligned: active.length, nWithinCutoff, pruneCutoff,
+                nSeqMatched: pairs.length, nMobileCA: caM.length, nRefCA: caR.length,
+                seqIdentity
+            };
+        }
+
+        function applyTransformToPdb(pdbText, R, t) {
+            const lines = pdbText.split('\n');
+            const out = [];
+            for (const line of lines) {
+                if ((line.startsWith('ATOM') || line.startsWith('HETATM')) && line.length >= 54) {
+                    const x = parseFloat(line.substring(30, 38));
+                    const y = parseFloat(line.substring(38, 46));
+                    const z = parseFloat(line.substring(46, 54));
+                    if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+                        const nx = R[0]*x+R[1]*y+R[2]*z+t[0];
+                        const ny = R[3]*x+R[4]*y+R[5]*z+t[1];
+                        const nz = R[6]*x+R[7]*y+R[8]*z+t[2];
+                        const f = (v) => { let s = v.toFixed(3); if (s.length > 8) s = v.toFixed(2); return s.padStart(8); };
+                        out.push(line.substring(0, 30) + f(nx) + f(ny) + f(nz) + line.substring(54));
+                        continue;
+                    }
+                }
+                out.push(line);
+            }
+            return out.join('\n');
+        }
+
         // Sequence alignment variables
         let sequenceAlignmentEnabled = false;
         let currentInputMode = 'fasta'; // 'fasta' or 'single'
@@ -3081,7 +3507,7 @@
                     layoutShowSequence: false,
                     layoutShowLog: false,
                     viewportShowExpand: false,
-                    viewportShowSelectionMode: false,
+                    viewportShowSelectionMode: true,
                     viewportShowAnimation: false
                 });
                 
@@ -3307,6 +3733,34 @@
                 }
             });
 
+            // Custom color picker handler
+            const customColorPicker = document.getElementById('custom-color-picker');
+            if (customColorPicker) {
+                // Initialize with last custom picked color
+                customColorPicker.value = lastCustomPickedColor;
+
+                customColorPicker.addEventListener('click', (e) => {
+                    // Ensure the value is set to the last custom picked color before opening the picker
+                    customColorPicker.value = lastCustomPickedColor;
+                    const customPickerOption = document.querySelector('.custom-color-picker-option');
+                    customPickerOption.classList.add('active');
+                });
+
+                customColorPicker.addEventListener('input', (e) => {
+                    const color = e.target.value;
+                    // Update lastCustomPickedColor whenever the picker changes
+                    lastCustomPickedColor = color;
+                    selectCustomColor(color);
+                    const customPickerOption = document.querySelector('.custom-color-picker-option');
+                    customPickerOption.classList.add('active');
+                });
+
+                customColorPicker.addEventListener('change', (e) => {
+                    // Ensure value is preserved after picker closes
+                    customColorPicker.value = lastCustomPickedColor;
+                });
+            }
+
             // Secondary structure color pickers with debouncing
             document.getElementById('helix-color').addEventListener('input', (e) => {
                 secondaryColors.helix = e.target.value;
@@ -3352,6 +3806,11 @@
                     }, 100); // 100ms debounce
                 }
             });
+
+            // Structure alignment event listeners
+            document.getElementById('struct-align-toggle').addEventListener('change', toggleStructAlign);
+            document.getElementById('run-align-btn').addEventListener('click', runStructureAlignment);
+            document.getElementById('align-ref-select').addEventListener('change', populateAlignMobileList);
 
             // Sequence alignment event listeners
             document.getElementById('seq-alignment-toggle').addEventListener('change', toggleSequenceAlignment);
@@ -4452,18 +4911,37 @@
                     await hideWaterRepresentation();
                 }
 
+                // Also update all active grid viewers
+                console.log(`Updating ${activeGridViewers.size} active grid viewers...`);
+                for (const viewerIndex of activeGridViewers) {
+                    try {
+                        const gridViewer = gridViewers[viewerIndex];
+                        if (gridViewer && gridViewer.plugin) {
+                            if (visible) {
+                                await showWaterRepresentationInViewer(gridViewer);
+                                console.log(`Grid viewer ${viewerIndex} - water shown`);
+                            } else {
+                                await hideWaterRepresentationInViewer(gridViewer);
+                                console.log(`Grid viewer ${viewerIndex} - water hidden`);
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Error updating water visibility in grid viewer ${viewerIndex}:`, error);
+                    }
+                }
+
                 console.log(`Water molecules ${visible ? 'shown' : 'hidden'}`);
             } catch (error) {
                 console.error('Error applying water visibility:', error);
             }
         }
 
-        // Hide water representations by deleting them
-        async function hideWaterRepresentation() {
-            if (!viewer || !viewer.plugin) return;
+        // Generic function to hide water representations in any viewer
+        async function hideWaterRepresentationInViewer(targetViewer) {
+            if (!targetViewer || !targetViewer.plugin) return;
 
             try {
-                const plugin = viewer.plugin;
+                const plugin = targetViewer.plugin;
                 const structures = plugin.managers.structure.hierarchy.current.structures;
 
                 console.log('Attempting to hide water...');
@@ -4504,12 +4982,17 @@
             }
         }
 
-        // Show water representations by recreating them
-        async function showWaterRepresentation() {
-            if (!viewer || !viewer.plugin) return;
+        // Hide water representations by deleting them (main viewer)
+        async function hideWaterRepresentation() {
+            await hideWaterRepresentationInViewer(viewer);
+        }
+
+        // Generic function to show water representations in any viewer
+        async function showWaterRepresentationInViewer(targetViewer) {
+            if (!targetViewer || !targetViewer.plugin) return;
 
             try {
-                const plugin = viewer.plugin;
+                const plugin = targetViewer.plugin;
                 const structures = plugin.managers.structure.hierarchy.current.structures;
 
                 console.log('Attempting to show water...');
@@ -4549,6 +5032,11 @@
             } catch (error) {
                 console.error('Error showing water representation:', error);
             }
+        }
+
+        // Show water representations by recreating them (main viewer)
+        async function showWaterRepresentation() {
+            await showWaterRepresentationInViewer(viewer);
         }
 
         // Detect pLDDT data in structure
@@ -4781,8 +5269,19 @@
             document.querySelectorAll('.color-option').forEach(option => {
                 option.classList.remove('active');
             });
-            document.querySelector(`[data-color="${color}"]`).classList.add('active');
             
+            // Check if this color exists in the palette
+            const colorOption = document.querySelector(`[data-color="${color}"]`);
+            if (colorOption) {
+                colorOption.classList.add('active');
+            } else {
+                // It's a custom color, so activate the custom color picker option
+                const customPickerOption = document.querySelector('.custom-color-picker-option');
+                if (customPickerOption) {
+                    customPickerOption.classList.add('active');
+                }
+            }
+
             if (currentColorMode === 'custom') {
                 await refreshVisualization();
             }
@@ -5191,6 +5690,11 @@
                     
                     // Apply default preset
                     await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
+                    
+                    // Check for water molecules and hide if water toggle is off
+                    if (!waterStyleEnabled) {
+                        await hideWaterRepresentationInViewer(gridViewer);
+                    }
                     
                     // Set default color mode based on format for grid viewers
                     if (['xyz', 'sdf', 'mol', 'mol2'].includes(file.format)) {
@@ -5616,7 +6120,7 @@
                     layoutShowSequence: false,
                     layoutShowLog: false,
                     viewportShowExpand: false,
-                    viewportShowSelectionMode: false,
+                    viewportShowSelectionMode: true,
                     viewportShowAnimation: false
                 });
                 console.log('Main viewer (re)initialized successfully');
@@ -5717,6 +6221,9 @@
             // Preserve scroll position if possible
             const currentScrollTop = historyContainer.scrollTop;
             historyContainer.innerHTML = ''; // Clear existing items
+
+            // Keep the alignment picker in sync with the loaded file set
+            if (structAlignEnabled) populateAlignPickers();
 
             if (loadedFiles.length === 0) {
                 historyContainer.textContent = 'No files loaded.';
@@ -7131,6 +7638,250 @@
          }
 
 
+        // ===== STRUCTURE ALIGNMENT (superpose any two loaded structures) =====
+        let structAlignEnabled = false;
+        let alignmentActive = false;           // whether the viewer is currently showing an alignment
+        const ALIGN_REF_COLOR = '#9AA5B1';     // neutral color for the fixed reference
+        const ALIGN_MOBILE_COLORS = ['#F97316','#8B5CF6','#EC4899','#10B981','#EAB308','#06B6D4','#EF4444','#3B82F6'];
+
+        function alignFormatOk(fmt) {
+            return fmt === 'pdb' || fmt === 'pdbqt' || fmt === 'ent';
+        }
+
+        // Toggle the Align Structures panel
+        async function toggleStructAlign() {
+            const toggle = document.getElementById('struct-align-toggle');
+            const content = document.getElementById('struct-align-content');
+            structAlignEnabled = toggle.checked;
+
+            if (structAlignEnabled) {
+                // Mutually exclusive with sequence alignment
+                const seqToggle = document.getElementById('seq-alignment-toggle');
+                if (seqToggle && seqToggle.checked) {
+                    seqToggle.checked = false;
+                    toggleSequenceAlignment();
+                }
+                // Alignment is a single-view experience
+                if (currentLayoutMode === 'grid') {
+                    document.getElementById('single-view').click();
+                }
+                content.classList.add('active');
+                populateAlignPickers();
+            } else {
+                content.classList.remove('active');
+                if (alignmentActive) await exitStructureAlignment();
+            }
+        }
+
+        // Populate the reference dropdown + mobile checkbox list from loadedFiles
+        function populateAlignPickers() {
+            const needFiles = document.getElementById('struct-align-need-files');
+            const picker = document.getElementById('struct-align-picker');
+            const refSelect = document.getElementById('align-ref-select');
+
+            if (loadedFiles.length < 2) {
+                needFiles.style.display = 'block';
+                picker.style.display = 'none';
+                return;
+            }
+            needFiles.style.display = 'none';
+            picker.style.display = 'block';
+
+            const prevRef = refSelect.value;
+            refSelect.innerHTML = '';
+            loadedFiles.forEach((f, i) => {
+                const opt = document.createElement('option');
+                opt.value = String(i);
+                opt.textContent = f.name;
+                if (!alignFormatOk(f.format)) opt.textContent += '  (needs PDB)';
+                refSelect.appendChild(opt);
+            });
+            // Default reference: currently viewed file, else first
+            if (prevRef !== '' && loadedFiles[prevRef]) {
+                refSelect.value = prevRef;
+            } else if (currentFileIndex >= 0) {
+                refSelect.value = String(currentFileIndex);
+            } else {
+                refSelect.value = '0';
+            }
+            populateAlignMobileList();
+        }
+
+        function populateAlignMobileList() {
+            const refIdx = parseInt(document.getElementById('align-ref-select').value, 10);
+            const list = document.getElementById('align-mobile-list');
+            list.innerHTML = '';
+            let colorIdx = 0;
+            loadedFiles.forEach((f, i) => {
+                if (i === refIdx) return;
+                const color = ALIGN_MOBILE_COLORS[colorIdx % ALIGN_MOBILE_COLORS.length];
+                colorIdx++;
+                const item = document.createElement('label');
+                item.className = 'align-mobile-item';
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.value = String(i);
+                cb.checked = true;
+                cb.dataset.color = color;
+                const swatch = document.createElement('span');
+                swatch.className = 'align-mobile-swatch';
+                swatch.style.background = color;
+                const name = document.createElement('span');
+                name.className = 'align-mobile-name';
+                name.textContent = f.name + (alignFormatOk(f.format) ? '' : ' (needs PDB)');
+                item.appendChild(cb);
+                item.appendChild(swatch);
+                item.appendChild(name);
+                list.appendChild(item);
+            });
+        }
+
+        // Run the superposition and render the result
+        async function runStructureAlignment() {
+            const resultsEl = document.getElementById('align-results');
+            const refIdx = parseInt(document.getElementById('align-ref-select').value, 10);
+            const refFile = loadedFiles[refIdx];
+            const checked = Array.from(document.querySelectorAll('#align-mobile-list input:checked'));
+
+            resultsEl.style.display = 'block';
+            if (!refFile) { resultsEl.innerHTML = '<div class="align-error">Select a reference structure.</div>'; return; }
+            if (checked.length === 0) { resultsEl.innerHTML = '<div class="align-error">Select at least one mobile structure to align.</div>'; return; }
+            if (!alignFormatOk(refFile.format)) {
+                resultsEl.innerHTML = '<div class="align-error">Structure alignment currently supports PDB-format files. The reference is ' + refFile.format.toUpperCase() + '.</div>';
+                return;
+            }
+
+            resultsEl.innerHTML = '<div style="font-size:12px;color:#666;">Aligning…</div>';
+            await new Promise(r => setTimeout(r, 20)); // let the UI paint
+
+            const mobiles = [];
+            for (const cb of checked) {
+                const mf = loadedFiles[parseInt(cb.value, 10)];
+                if (!alignFormatOk(mf.format)) continue;
+                const res = alignStructures(mf.data, refFile.data);
+                mobiles.push({ file: mf, color: cb.dataset.color, result: res });
+            }
+            if (mobiles.length === 0) {
+                resultsEl.innerHTML = '<div class="align-error">No PDB-format mobile structures selected.</div>';
+                return;
+            }
+
+            await renderAlignmentView(refFile, mobiles);
+            renderAlignmentResults(refFile, mobiles);
+        }
+
+        // Load reference + transformed mobiles into the main viewer
+        async function renderAlignmentView(refFile, mobiles) {
+            await initializeSingleSessionMode();
+            const plugin = viewer.plugin;
+            await plugin.clear();
+            alignmentActive = true;
+
+            // Reference (fixed) in neutral color
+            await loadStructureUniformColor(refFile.data, refFile.format, ALIGN_REF_COLOR);
+
+            // Each mobile, transformed onto the reference
+            for (const m of mobiles) {
+                if (m.result.error) continue;
+                const moved = applyTransformToPdb(m.file.data, m.result.R, m.result.t);
+                await loadStructureUniformColor(moved, 'pdb', m.color);
+            }
+
+            // Frame everything
+            try { plugin.managers.camera.reset(); } catch (e) {}
+        }
+
+        // Load one structure into the main viewer and paint it a single uniform color
+        async function loadStructureUniformColor(pdbText, format, hexColor) {
+            const plugin = viewer.plugin;
+            const molstarFormat = (format === 'mmcif') ? 'mmcif' : 'pdb';
+            const blob = new Blob([pdbText], { type: 'chemical/x-pdb' });
+            const url = URL.createObjectURL(blob);
+            try {
+                const data = await plugin.builders.data.download({ url, isBinary: false });
+                const trajectory = await plugin.builders.structure.parseTrajectory(data, molstarFormat);
+                const structure = await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
+                if (structure && structure.components) {
+                    await plugin.dataTransaction(async () => {
+                        await plugin.managers.structure.component.updateRepresentationsTheme(
+                            structure.components,
+                            { color: 'uniform', params: { value: hexToMolstarColor(hexColor) } }
+                        );
+                    });
+                }
+                return structure;
+            } finally {
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Show metrics card
+        function renderAlignmentResults(refFile, mobiles) {
+            const el = document.getElementById('align-results');
+            let html = '';
+
+            // Color legend
+            html += '<div class="align-legend">';
+            html += '<div class="align-legend-item"><span class="align-legend-swatch" style="background:' + ALIGN_REF_COLOR + '"></span><span><strong>Reference:</strong> ' + escapeHtmlAlign(refFile.name) + '</span></div>';
+            for (const m of mobiles) {
+                html += '<div class="align-legend-item"><span class="align-legend-swatch" style="background:' + m.color + '"></span><span>' + escapeHtmlAlign(m.file.name) + '</span></div>';
+            }
+            html += '</div>';
+
+            // Primary metrics (from the first successful mobile)
+            const primary = mobiles.find(m => !m.result.error);
+            if (primary) {
+                const r = primary.result;
+                html += '<div class="align-results-metrics">';
+                html += '<div class="align-metric"><div class="align-metric-value">' + r.rmsd.toFixed(2) + ' Å</div><div class="align-metric-label">Core RMSD</div></div>';
+                html += '<div class="align-metric"><div class="align-metric-value">' + r.nWithinCutoff + '</div><div class="align-metric-label">Aligned res (&lt;' + r.pruneCutoff + 'Å)</div></div>';
+                html += '<div class="align-metric"><div class="align-metric-value">' + (r.seqIdentity * 100).toFixed(0) + '%</div><div class="align-metric-label">Seq identity</div></div>';
+                html += '<div class="align-metric"><div class="align-metric-value">' + r.nSeqMatched + '</div><div class="align-metric-label">Matched res</div></div>';
+                html += '</div>';
+
+                if (r.nWithinCutoff < Math.max(5, 0.1 * r.nSeqMatched)) {
+                    html += '<div class="struct-align-notice" style="margin-bottom:10px;">Few residues superpose closely — these structures may be unrelated or in very different conformations.</div>';
+                }
+            }
+
+            // Per-mobile breakdown when aligning more than one
+            if (mobiles.length > 1) {
+                html += '<div style="margin-top:6px;">';
+                for (const m of mobiles) {
+                    if (m.result.error) {
+                        html += '<div class="align-pair-row"><span>' + escapeHtmlAlign(m.file.name) + '</span><span style="color:#a94442;">' + m.result.error + '</span></div>';
+                    } else {
+                        html += '<div class="align-pair-row"><span>' + escapeHtmlAlign(m.file.name) + '</span><span><strong>' + m.result.rmsd.toFixed(2) + ' Å</strong> · ' + m.result.nWithinCutoff + ' res</span></div>';
+                    }
+                }
+                html += '</div>';
+            }
+
+            html += '<button class="align-reset-btn" id="align-reset-btn">Exit alignment</button>';
+            el.innerHTML = html;
+            const resetBtn = document.getElementById('align-reset-btn');
+            if (resetBtn) resetBtn.addEventListener('click', async () => {
+                document.getElementById('struct-align-toggle').checked = false;
+                await toggleStructAlign();
+            });
+        }
+
+        function escapeHtmlAlign(s) {
+            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        // Leave alignment and restore the normally-viewed structure
+        async function exitStructureAlignment() {
+            alignmentActive = false;
+            document.getElementById('align-results').style.display = 'none';
+            await initializeSingleSessionMode();
+            if (viewer && viewer.plugin) await viewer.plugin.clear();
+            if (currentFileIndex >= 0 && loadedFiles[currentFileIndex]) {
+                const f = loadedFiles[currentFileIndex];
+                await parseStructureFile(f.data, f.format, false);
+            }
+        }
+
         // ===== SEQUENCE ALIGNMENT FUNCTIONS =====
         
         // Toggle sequence alignment section
@@ -7585,7 +8336,7 @@
                     layoutShowSequence: false,
                     layoutShowLog: false,
                     viewportShowExpand: false,
-                    viewportShowSelectionMode: false,
+                    viewportShowSelectionMode: true,
                     viewportShowAnimation: false
                 });
             }
